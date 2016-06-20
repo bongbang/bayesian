@@ -1,5 +1,5 @@
-var margin_value = 0;
-var margin = {top: 20, right: 30, bottom: 20, left: 70},
+"use strict";
+var margin = {top: 20, right: 60, bottom: 20, left: 70},
     width = 300,
     height = width*2;
 
@@ -10,16 +10,13 @@ var V =	92.5, // Sensitivity
   R_black = 10.49;
 
 var frames = [
-  {V:50, U:50, R:0},
-  {V:50, U:50, R:R},
-  {V:V, U:50, R:R},
-  {V:V, U:U, R:R},
-  {V:V, U:U, R:R_young},
-  {V:V, U:U, R:R_black},
+	{V:0, U:100, R:0},
+	{V:0, U:100, R:R},
+	{V:V, U:100, R:R},
+	{V:V, U:U, R:R},
+	{V:V, U:U, R:R_young},
+	{V:V, U:U, R:R_black},
 ];
-
-// 1.87%
-// 0.65%
 
 var scale = d3.scale.linear()
   .domain([0,100])
@@ -38,12 +35,21 @@ var truPos = svg.append('rect'),
 	falPos = svg.append('rect'),
 	truNeg = svg.append('rect'),
 
-	rLabel = svg.append('text'),
-  vLabel = svg.append('text');
+	rLabel = svg.append('text')
+		.text(frames[0].R)
+		.style('opacity', 0),
+
+  vLabel = svg.append('text')
+		.text(frames[0].V)
+		.style('opacity', 0),
+
+  uLabel = svg.append('text')
+		.text(frames[0].U)
+		.style('opacity', 0);
 
 svg.selectAll('rect').attr('fill','#CCC');
 
-function plot(i) {
+function plot(i, advance) {
   var frame = frames[i],
 		sU = scale(frame.U),
 		sV = scale(frame.V),
@@ -52,98 +58,131 @@ function plot(i) {
 		posNoTestColor = '#000',
 		negNoTestColor = '#CCC',
 		conPosNoTest = [1],
-		conNegNoTest = [0,1,2]
-			
-		myDuration = 2000;
+		conNegNoTest = [0,1,2],
 
-	// d3.selectAll('svg').transition().duration(10000);
+		myDuration = 1000;
+	var fontShiftDuration = 500;
 
-	function labelClass (hideFrames, strongFrames) {
-		if (hideFrames.indexOf(i) >= 0) {
-			return 'hide';
-		} else if (strongFrames.indexOf(i) >= 0) {
-			return 'emphasized';
+	function rLabelFontShift() {
+		return [0,1,2,4].indexOf(i) !== -1;
+	}
+
+	function vLabelFontShift() {
+		if (advance) {
+			return [2,3].indexOf(i) !== -1;
 		} else {
-			return null;
+			return [1,2].indexOf(i) !== -1;
 		}
 	}
 
-  truPos.transition().duration(myDuration)
+	function uLabelFontShift() {
+		return [3,4].indexOf(i) !== -1;
+	}
+
+	function rectDelay() {
+		return rLabelFontShift() || vLabelFontShift() || uLabelFontShift() ?
+			fontShiftDuration : 0;
+	}
+
+  truPos.transition().delay(rectDelay)
+		.duration(myDuration)
     .attr('y', width - sV)
     .attr('height', sV)
     .attr('width', sR)
     // .attr('fill', i ? '#C00': negNoTestColor);
     .attr('fill', conPosNoTest.indexOf(i) + 1 ? posNoTestColor:'#C00');
 
-  falNeg.transition().duration(myDuration)
+  falNeg.transition().delay(rectDelay)
+		.duration(myDuration)
     .attr('y', width)
     .attr('height', width - sV)
     .attr('width', sR)
     // .attr('fill', i ? '#FAA': negNoTestColor);
     .attr('fill', conPosNoTest.indexOf(i) + 1 ? posNoTestColor:'#FAA');
 
-  falPos.transition().duration(myDuration)
+  falPos.transition().delay(rectDelay).duration(myDuration)
     .attr('x', sR)
     .attr('y', sU)
     .attr('height', width - sU)
     .attr('width', width - sR)
     .attr('fill', conNegNoTest.indexOf(i) + 1 ? negNoTestColor:'#060');
 
-  truNeg.transition().duration(myDuration)
-    .attr('x', sR)
-    .attr('y', width)
-    .attr('height', sU)
-    .attr('width', width - sR)
-    .attr('fill',  conNegNoTest.indexOf(i) + 1 ? negNoTestColor:'#AFA');
+	truNeg.transition().delay(rectDelay).duration(myDuration)
+		.attr('x', sR)
+		.attr('y', width)
+		.attr('height', sU)
+		.attr('width', width - sR)
+		.attr('fill',  conNegNoTest.indexOf(i) + 1 ? negNoTestColor:'#AFA');
 
-	// function runNumber(start, end, decimal) {
-	// 	d3.select(this).tween('text', function() {
-	// 		var n = d3.interpolateNumber(start, end);
-	// 		return function(t) {d3.select(this).text(n(t).toFixed(decimal)+'%');};
-	function runNumber(start, end, decimal) {
+	function runNumber(that, end, decimal) {
 		return function() {
-			var n = d3.interpolateNumber(start, end);
+			var n = d3.interpolateNumber(that.text().replace(/%/g, ""), end);
 			return function(t) {d3.select(this).text(n(t).toFixed(decimal)+'%');};
 		};
 	}
-	// 	});
-	// }
-	
-  rLabel.transition().duration(myDuration)
+
+  // function runNumber2(selection) {
+		// selection
+			// .tween('text', function() {
+		  // var n = d3.interpolateNumber(selection.text().replace(/%/g, ""), 0);
+			// return function(t) {d3.select(this).text(n(t).toFixed(1)+'%');};
+		// });
+  // }
+
+	// function rStyles(selection) {
+	// 	selection
+	// 		.style('opacity', i == 0 ? 0 : 1)
+	// 		.style('font-weight', [1].indexOf(i) !== -1 ? 700 : 400)
+	// ;}
+
+
+  rLabel.transition()
+		.duration(rLabelFontShift() ? fontShiftDuration : 0)
+		.style('font-weight', [1,4,5,6].indexOf(i) !== -1 ? 700 : 400)
+		.style('opacity', i === 0 ? 0 : 1)
+
+		.transition().duration(myDuration)
     .attr('x', sR/2)
     .attr('y', width - sV - 5)
     .attr('text-anchor', 'middle')
-    // .attr('class', function() {
-    //   if (i === 0) return 'hide';
-    //   else if (i === 1) return 'emphasized';
-    //   else return null;
-    // })
-		.attr('class', labelClass([0],[1,4,5]))
-    .text(frames[i].R.toPrecision(2)+'%');
+		.tween('text', runNumber(rLabel,frames[i].R, 2))
+		;
 
-  vLabel.transition().duration(myDuration)
-		.attr('y', width - sV/2) .attr('x', -10)
-		.attr('text-anchor', 'end')
-		.attr('class', labelClass([0,1],[2]))
-		.tween('text', runNumber(0, frames[i].V, 1));
-	//
-		// .call(runNumber(0, frames[i].V, 1))
-		// .tween('text', runNumber(0, frames[i].V, 1));
-		//
-		// below works
-		// .tween('text', function() {
-		// 	var n = d3.interpolateNumber(0, frames[i].V);
-		// 	return function(t) {d3.select(this).text(n(t).toFixed(1)+'%');};
-		// });
+	if (vLabelFontShift()) {
+		vLabel.transition()
+			.duration(fontShiftDuration)
+			.style('font-weight', i === 2 ? 700 : 400)
+			.style('opacity', [0,1].indexOf(i) !== -1 ? 0 : 1);
+	}
+
+	vLabel.transition().delay(vLabelFontShift() ? fontShiftDuration : myDuration)
+			.duration(myDuration)
+			.attr('y', width - sV/2 + 7) .attr('x', -10)
+			.attr('text-anchor', 'end')
+			.tween('text', runNumber(vLabel, frames[i].V, 1))
+			;
+
+	uLabel.transition()
+		.duration(uLabelFontShift() ? fontShiftDuration : 0)
+		.style('font-weight', i === 3 ? 700 : 400)
+		.style('opacity', [0,1,2].indexOf(i) !== -1 ? 0 : 1)
+
+		.transition().duration(myDuration)
+		.attr('x', width + 10)
+		.attr('y', width + sU/2)
+		.attr('text-anchor', 'start')
+		.tween('text', runNumber(uLabel, frames[i].U, 1))
+		;
+
 }
 
-plot(0);
-//
-// ===== old
+plot(0,1);
 var i = 0;
 d3.selectAll("div button").data([-1, 1]).on('click', function(d) {
-  i = i+d;
-  if (i >= frames.length) {i = 0}
-  else if (i < 0) {i = frames.length-1}
-  plot(i);
+	i = i+d;
+	if (i >= frames.length) {i = 0;
+		// d = -1;
+	}
+	else if (i < 0) {i = frames.length-1;}
+	plot(i,d);
 });
