@@ -65,13 +65,6 @@ function plot(i, delay) {
 		conNegNoTest = [0,1,2]
 		;
 
-
-	// function delay() {
-	// 	return rLabelFontShift() || vLabelFontShift() || uLabelFontShift() ?
-	// 		fontShiftDuration : 0;
-	// }
-
-	// var delay = 0;
   truPos.transition().delay(delay)
 		.duration(rectDuration)
     .attr('y', width - sV)
@@ -135,60 +128,55 @@ function plot(i, delay) {
 var rSwitch = false,
 		vSwitch = false,
 		uSwitch = false;
-function labelSwitch(i, advance, delay) {
+
+rLabel.on = false;
+vLabel.on = false;
+uLabel.on = false;
+rLabel.strong = false;
+vLabel.strong = false;
+uLabel.strong = false;
+
+function labelsPrep(i, advance, delay) {
 	var lastFrame = frames.length-1;
 
-	function rLabelFontShift() {
-		if (advance === 1) {
-			return [0,1].indexOf(i) !== -1;
-		} else {
-			return [0,lastFrame].indexOf(i) !== -1;
+	function labelSwitch(label,onFrames,strongFrames) {
+		var toggled	= false;
+
+		function toggle(toggleFrames) {
+			if (advance === 1) {
+				toggleFrames.push(0);
+			} else {
+				toggleFrames = toggleFrames.map(function(x) {return x-1;});
+				toggleFrames.push(lastFrame);
+			}
+			return toggleFrames.indexOf(i) !== -1;
 		}
-	}
 
-	function vLabelFontShift() {
-		if (advance === 1) {
-			return [0,2].indexOf(i) !== -1;
-		} else {
-			return [1,lastFrame].indexOf(i) !== -1;
+		if (toggle(onFrames)) {
+			label.on = !label.on;
+			toggled = true;
 		}
-	}
 
-	function uLabelFontShift() {
-		if (advance === 1) {
-			return [0,3].indexOf(i) !== -1;
-		} else {
-			return [2,lastFrame].indexOf(i) !==-1;
+		// if (strongToggle()) {
+		// 	label.strong = !label.strong;
+		// 	toggled = true;
+		// }
+
+		if (toggled) {
+			label.transition().delay(delay)
+			.duration(fontShiftDuration)
+			// .style('font-weight', [1,4,5,6].indexOf(i) !== -1 ? 700 : 400)
+			.style('opacity', label.on ? 1 : 0);
 		}
+
+		return toggled;
 	}
+	
+	var rToggled = labelSwitch(rLabel,[1],[]);
+	var vToggled = labelSwitch(vLabel,[2],[]);
+	var uToggled = labelSwitch(uLabel,[3],[]);
 
-	if (rLabelFontShift()) {
-		rSwitch = !rSwitch;
-		rLabel.transition().delay(delay)
-			.duration(fontShiftDuration)
-		// .style('font-weight', [1,4,5,6].indexOf(i) !== -1 ? 700 : 400)
-			.style('opacity', rSwitch ? 1 : 0)
-		;
-	}
-
-	if (vLabelFontShift()) {
-		vSwitch = !vSwitch;
-		vLabel.transition().delay(delay)
-			.duration(fontShiftDuration)
-			// .style('font-weight', i === 2 ? 700 : 400)
-			.style('opacity', vSwitch ? 1 : 0);
-	}
-
-
-	if (uLabelFontShift()) {
-		uSwitch = !uSwitch;
-		uLabel.transition().delay(delay)
-			.duration(fontShiftDuration)
-			// .style('font-weight', i === 2 ? 700 : 400)
-			.style('opacity', uSwitch ? 1 : 0);
-	}
-
-	return rLabelFontShift() || vLabelFontShift() || uLabelFontShift() ?
+	return rToggled || vToggled || uToggled ?
 		500 : 0;
 }
 
@@ -203,10 +191,10 @@ d3.selectAll("div button").data([-1, 1]).on('click', function(d) {
 	}
 
 	if ((d === 1 && i !== 0) || (d === -1 && i === frames.length-1)) {
-		var rectDelay = labelSwitch(i,d,0);
+		var rectDelay = labelsPrep(i,d,0);
 		plot(i,rectDelay);
 	} else {
 		plot(i, 0);
-		labelSwitch(i,d, rectDuration);
+		labelsPrep(i,d, rectDuration);
 	}
 });
