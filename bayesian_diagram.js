@@ -18,6 +18,10 @@ var frames = [
 	{V:V, U:U, R:R_black},
 ];
 
+var fontShiftDuration = 500,
+			myDuration = 1000
+			;
+
 var scale = d3.scale.linear()
   .domain([0,100])
   .range([0,width]);
@@ -49,7 +53,7 @@ var truPos = svg.append('rect'),
 
 svg.selectAll('rect').attr('fill','#CCC');
 
-function plot(i, advance) {
+function plot(i, rectDelay) {
   var frame = frames[i],
 		sU = scale(frame.U),
 		sV = scale(frame.V),
@@ -58,32 +62,16 @@ function plot(i, advance) {
 		posNoTestColor = '#000',
 		negNoTestColor = '#CCC',
 		conPosNoTest = [1],
-		conNegNoTest = [0,1,2],
+		conNegNoTest = [0,1,2]
+		;
 
-		myDuration = 1000;
-	var fontShiftDuration = 500;
 
-	function rLabelFontShift() {
-		return [0,1,2,4].indexOf(i) !== -1;
-	}
+	// function rectDelay() {
+	// 	return rLabelFontShift() || vLabelFontShift() || uLabelFontShift() ?
+	// 		fontShiftDuration : 0;
+	// }
 
-	function vLabelFontShift() {
-		if (advance) {
-			return [2,3].indexOf(i) !== -1;
-		} else {
-			return [1,2].indexOf(i) !== -1;
-		}
-	}
-
-	function uLabelFontShift() {
-		return [3,4].indexOf(i) !== -1;
-	}
-
-	function rectDelay() {
-		return rLabelFontShift() || vLabelFontShift() || uLabelFontShift() ?
-			fontShiftDuration : 0;
-	}
-
+	// var rectDelay = 0;
   truPos.transition().delay(rectDelay)
 		.duration(myDuration)
     .attr('y', width - sV)
@@ -135,39 +123,21 @@ function plot(i, advance) {
 	// 		.style('font-weight', [1].indexOf(i) !== -1 ? 700 : 400)
 	// ;}
 
-
-  rLabel.transition()
-		.duration(rLabelFontShift() ? fontShiftDuration : 0)
-		.style('font-weight', [1,4,5,6].indexOf(i) !== -1 ? 700 : 400)
-		.style('opacity', i === 0 ? 0 : 1)
-
-		.transition().duration(myDuration)
+  rLabel.transition().delay(rectDelay).duration(myDuration)
     .attr('x', sR/2)
     .attr('y', width - sV - 5)
     .attr('text-anchor', 'middle')
 		.tween('text', runNumber(rLabel,frames[i].R, 2))
 		;
 
-	if (vLabelFontShift()) {
-		vLabel.transition()
-			.duration(fontShiftDuration)
-			.style('font-weight', i === 2 ? 700 : 400)
-			.style('opacity', [0,1].indexOf(i) !== -1 ? 0 : 1);
-	}
-
-	vLabel.transition().delay(vLabelFontShift() ? fontShiftDuration : myDuration)
+	vLabel.transition().delay(rectDelay)
 			.duration(myDuration)
 			.attr('y', width - sV/2 + 7) .attr('x', -10)
 			.attr('text-anchor', 'end')
 			.tween('text', runNumber(vLabel, frames[i].V, 1))
 			;
 
-	uLabel.transition()
-		.duration(uLabelFontShift() ? fontShiftDuration : 0)
-		.style('font-weight', i === 3 ? 700 : 400)
-		.style('opacity', [0,1,2].indexOf(i) !== -1 ? 0 : 1)
-
-		.transition().duration(myDuration)
+	uLabel.transition().delay(rectDelay).duration(myDuration)
 		.attr('x', width + 10)
 		.attr('y', width + sU/2)
 		.attr('text-anchor', 'start')
@@ -176,13 +146,81 @@ function plot(i, advance) {
 
 }
 
-plot(0,1);
+var rSwitch = false,
+		vSwitch = false,
+		uSwitch = false;
+function labelSwitch(i, advance, delay) {
+	var lastFrame = frames.length-1;
+
+	function rLabelFontShift() {
+		if (advance === 1) {
+			return [0,1].indexOf(i) !== -1;
+		} else {
+			return [0,lastFrame].indexOf(i) !== -1;
+		}
+	}
+
+	function vLabelFontShift() {
+		if (advance === 1) {
+			return [0,2].indexOf(i) !== -1;
+		} else {
+			return [1,lastFrame].indexOf(i) !== -1;
+		}
+	}
+
+	function uLabelFontShift() {
+		if (advance === 1) {
+			return [0,3].indexOf(i) !== -1;
+		} else {
+			return [2,lastFrame].indexOf(i) !==-1;
+		}
+	}
+
+	if (rLabelFontShift()) {
+		rSwitch = !rSwitch;
+		rLabel.transition().delay(delay)
+			.duration(fontShiftDuration)
+		// .style('font-weight', [1,4,5,6].indexOf(i) !== -1 ? 700 : 400)
+			.style('opacity', rSwitch ? 1 : 0)
+		;
+	}
+
+	if (vLabelFontShift()) {
+		vSwitch = !vSwitch;
+		vLabel.transition().delay(delay)
+			.duration(fontShiftDuration)
+			// .style('font-weight', i === 2 ? 700 : 400)
+			.style('opacity', vSwitch ? 1 : 0);
+	}
+
+
+	if (uLabelFontShift()) {
+		uSwitch = !uSwitch;
+		uLabel.transition().delay(delay)
+			.duration(fontShiftDuration)
+			// .style('font-weight', i === 2 ? 700 : 400)
+			.style('opacity', uSwitch ? 1 : 0);
+	}
+
+	return rLabelFontShift() || vLabelFontShift() || uLabelFontShift() ?
+		500 : 0;
+}
+
+plot(0,0);
 var i = 0;
 d3.selectAll("div button").data([-1, 1]).on('click', function(d) {
 	i = i+d;
 	if (i >= frames.length) {i = 0;
-		// d = -1;
 	}
-	else if (i < 0) {i = frames.length-1;}
-	plot(i,d);
+	else if (i < 0) {
+		i = frames.length-1;
+	}
+
+	if ((d === 1 && i !== 0) || (d === -1 && i === frames.length-1)) {
+		var rectDelay = labelSwitch(i,d,0);
+		plot(i,rectDelay);
+	} else {
+		plot(i, 0);
+		labelSwitch(i,d, myDuration);
+	}
 });
