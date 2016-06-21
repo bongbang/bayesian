@@ -5,9 +5,9 @@ var margin = {top: 20, right: 60, bottom: 20, left: 70},
 
 var V =	92.5, // Sensitivity
   U = 98.6, // Specificity
-  R = 0.65,
-  R_young = 1.87,
-  R_black = 10.49;
+  R = 0.65, // White female 25-29
+  R_young = 1.87, // WF 20-24
+  R_black = 10.49; // BF 20-24
 
 var frames = [
 	{V:0, U:100, R:0},
@@ -19,7 +19,7 @@ var frames = [
 ];
 
 var fontShiftDuration = 500,
-			myDuration = 1000
+		rectDuration = 1000
 			;
 
 var scale = d3.scale.linear()
@@ -53,7 +53,7 @@ var truPos = svg.append('rect'),
 
 svg.selectAll('rect').attr('fill','#CCC');
 
-function plot(i, rectDelay) {
+function plot(i, delay) {
   var frame = frames[i],
 		sU = scale(frame.U),
 		sV = scale(frame.V),
@@ -66,36 +66,36 @@ function plot(i, rectDelay) {
 		;
 
 
-	// function rectDelay() {
+	// function delay() {
 	// 	return rLabelFontShift() || vLabelFontShift() || uLabelFontShift() ?
 	// 		fontShiftDuration : 0;
 	// }
 
-	// var rectDelay = 0;
-  truPos.transition().delay(rectDelay)
-		.duration(myDuration)
+	// var delay = 0;
+  truPos.transition().delay(delay)
+		.duration(rectDuration)
     .attr('y', width - sV)
     .attr('height', sV)
     .attr('width', sR)
     // .attr('fill', i ? '#C00': negNoTestColor);
     .attr('fill', conPosNoTest.indexOf(i) + 1 ? posNoTestColor:'#C00');
 
-  falNeg.transition().delay(rectDelay)
-		.duration(myDuration)
+  falNeg.transition().delay(delay)
+		.duration(rectDuration)
     .attr('y', width)
     .attr('height', width - sV)
     .attr('width', sR)
     // .attr('fill', i ? '#FAA': negNoTestColor);
     .attr('fill', conPosNoTest.indexOf(i) + 1 ? posNoTestColor:'#FAA');
 
-  falPos.transition().delay(rectDelay).duration(myDuration)
+  falPos.transition().delay(delay).duration(rectDuration)
     .attr('x', sR)
     .attr('y', sU)
     .attr('height', width - sU)
     .attr('width', width - sR)
     .attr('fill', conNegNoTest.indexOf(i) + 1 ? negNoTestColor:'#060');
 
-	truNeg.transition().delay(rectDelay).duration(myDuration)
+	truNeg.transition().delay(delay).duration(rectDuration)
 		.attr('x', sR)
 		.attr('y', width)
 		.attr('height', sU)
@@ -109,35 +109,21 @@ function plot(i, rectDelay) {
 		};
 	}
 
-  // function runNumber2(selection) {
-		// selection
-			// .tween('text', function() {
-		  // var n = d3.interpolateNumber(selection.text().replace(/%/g, ""), 0);
-			// return function(t) {d3.select(this).text(n(t).toFixed(1)+'%');};
-		// });
-  // }
-
-	// function rStyles(selection) {
-	// 	selection
-	// 		.style('opacity', i == 0 ? 0 : 1)
-	// 		.style('font-weight', [1].indexOf(i) !== -1 ? 700 : 400)
-	// ;}
-
-  rLabel.transition().delay(rectDelay).duration(myDuration)
+  rLabel.transition().delay(delay).duration(rectDuration)
     .attr('x', sR/2)
     .attr('y', width - sV - 5)
     .attr('text-anchor', 'middle')
 		.tween('text', runNumber(rLabel,frames[i].R, 2))
 		;
 
-	vLabel.transition().delay(rectDelay)
-			.duration(myDuration)
+	vLabel.transition().delay(delay)
+			.duration(rectDuration)
 			.attr('y', width - sV/2 + 7) .attr('x', -10)
 			.attr('text-anchor', 'end')
 			.tween('text', runNumber(vLabel, frames[i].V, 1))
 			;
 
-	uLabel.transition().delay(rectDelay).duration(myDuration)
+	uLabel.transition().delay(delay).duration(rectDuration)
 		.attr('x', width + 10)
 		.attr('y', width + sU/2)
 		.attr('text-anchor', 'start')
@@ -221,6 +207,6 @@ d3.selectAll("div button").data([-1, 1]).on('click', function(d) {
 		plot(i,rectDelay);
 	} else {
 		plot(i, 0);
-		labelSwitch(i,d, myDuration);
+		labelSwitch(i,d, rectDuration);
 	}
 });
