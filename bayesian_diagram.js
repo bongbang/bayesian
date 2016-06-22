@@ -1,5 +1,5 @@
 "use strict";
-var margin = {top: 20, right: 60, bottom: 20, left: 70},
+var margin = {top: 20, right: 70, bottom: 20, left: 70},
     width = 300,
     height = width*2;
 
@@ -13,6 +13,7 @@ var frames = [
 	{V:0, U:100, R:0},
 	{V:0, U:100, R:R},
 	{V:V, U:100, R:R},
+	{V:V, U:U, R:R},
 	{V:V, U:U, R:R},
 	{V:V, U:U, R:R_young},
 	{V:V, U:U, R:R_black},
@@ -65,16 +66,14 @@ function plot(i, delay) {
 		conNegNoTest = [0,1,2]
 		;
 
-  truPos.transition().delay(delay)
-		.duration(rectDuration)
+  truPos.transition().delay(delay).duration(rectDuration)
     .attr('y', width - sV)
     .attr('height', sV)
     .attr('width', sR)
     // .attr('fill', i ? '#C00': negNoTestColor);
     .attr('fill', conPosNoTest.indexOf(i) + 1 ? posNoTestColor:'#C00');
 
-  falNeg.transition().delay(delay)
-		.duration(rectDuration)
+  falNeg.transition().delay(delay).duration(rectDuration)
     .attr('y', width)
     .attr('height', width - sV)
     .attr('width', sR)
@@ -125,10 +124,6 @@ function plot(i, delay) {
 
 }
 
-var rSwitch = false,
-		vSwitch = false,
-		uSwitch = false;
-
 rLabel.on = false;
 vLabel.on = false;
 uLabel.on = false;
@@ -139,10 +134,10 @@ uLabel.strong = false;
 function labelsPrep(i, advance, delay) {
 	var lastFrame = frames.length-1;
 
-	function labelSwitch(label,onFrames,strongFrames) {
-		var toggled	= false;
+	function labelSwitch(label,onToggle,strongFrames) {
+		var toggled, onToggled, strongToggled;
 
-		function toggle(toggleFrames) {
+		function onSwitch(toggleFrames) {
 			if (advance === 1) {
 				toggleFrames.push(0);
 			} else {
@@ -152,29 +147,39 @@ function labelsPrep(i, advance, delay) {
 			return toggleFrames.indexOf(i) !== -1;
 		}
 
-		if (toggle(onFrames)) {
-			label.on = !label.on;
-			toggled = true;
+		function strongSwitch(strongFrames) {
+			var oldStrong = label.strong;
+			if (strongFrames.indexOf(i) !== -1) {
+				label.strong = true;
+			} else {
+				label.strong = false;
+			}
+			return oldStrong !== label.strong;
 		}
 
-		// if (strongToggle()) {
-		// 	label.strong = !label.strong;
-		// 	toggled = true;
-		// }
+		if (onSwitch(onToggle)) {
+			label.on = !label.on;
+			onToggled = true;
+		}
+
+		strongToggled = strongSwitch(strongFrames);
+
+		toggled = onToggled || strongToggled;
 
 		if (toggled) {
 			label.transition().delay(delay)
 			.duration(fontShiftDuration)
-			// .style('font-weight', [1,4,5,6].indexOf(i) !== -1 ? 700 : 400)
+			.attr('font-weight', label.strong ? 700 : 400)
+			.attr('font-size', label.strong ? '1.4em' : '1em')
 			.style('opacity', label.on ? 1 : 0);
 		}
 
 		return toggled;
 	}
 	
-	var rToggled = labelSwitch(rLabel,[1],[]);
-	var vToggled = labelSwitch(vLabel,[2],[]);
-	var uToggled = labelSwitch(uLabel,[3],[]);
+	var rToggled = labelSwitch(rLabel,[1],[1,5,6]);
+	var vToggled = labelSwitch(vLabel,[2],[2]);
+	var uToggled = labelSwitch(uLabel,[3],[3]);
 
 	return rToggled || vToggled || uToggled ?
 		500 : 0;
