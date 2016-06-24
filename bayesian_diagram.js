@@ -6,15 +6,20 @@ var margin = {top: 20, right: 70, bottom: 20, left: 70},
 var V =	92.5, // Sensitivity
   U = 98.6, // Specificity
   R = 0.65, // White female 25-29
-  R_young = 1.87, // WF 20-24
-  R_black = 10.49; // BF 20-24
+  R_young = 1.87, // WF 18-24
+  R_black = 10.49; // BF 18-24
 
 var frames = [
-	{V:0, U:100, R:0},
-	{V:0, U:100, R:R},
-	{V:V, U:100, R:R},
-	{V:V, U:U, R:R},
-	{V:V, U:U, R:R},
+	{V:0, U:100, R:0, text:
+	'Let the square represent white American women aged 25 &ndash; 29.'},
+	{V:0, U:100, R:R, text: 
+	'0.65% of these women have Chlamydia.'},
+	{V:V, U:100, R:R, text:
+	"If testing is mandatory, 92.5% of the infected group can be expected to test positive, given the test's sensitivity&hellip;"},
+	{V:V, U:U, R:R, text:
+	"&hellip; and 1.6% of the healthy group to test positive, given the test's specificity."},
+	{V:V, U:U, R:R, text:
+	"Among positive testers (looking like half a plus sign on the plot), the red porpotion represents the test's positive predictive value (PPV) of 30%, wwhich means a false positive of as high as"},
 	{V:V, U:U, R:R_young},
 	{V:V, U:U, R:R_black},
 ];
@@ -28,6 +33,8 @@ var scale = d3.scale.linear()
   .range([0,width]);
 
 var svg = d3.select('body').append('svg')
+	.attr('xmlns', 'http://www.w3.org/2000/svg')
+	.attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
   .style('border', '1px solid black')
   .attr("width", width + margin.left + margin.right)
   .attr("height", height + margin.top + margin.bottom)
@@ -35,10 +42,32 @@ var svg = d3.select('body').append('svg')
   .append("g")
   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+var defs = svg.append('defs');
+defs.append('clipPath')
+	.attr('id', 'positive_clip')
+	.append('rect')
+	.attr('class', 'fal_neg');
+defs.append('clipPath')
+	.attr('id', 'negative_clip')
+	.append('rect')
+	.attr('class', 'tru_neg');
+
+var posImage = svg.append('image')
+			.attr('clip-path', 'url(#positive_clip)'),
+		negImage = svg.append('image')
+			.attr('clip-path', 'url(#negative_clip)');
+svg.selectAll('image')
+	.attr('xlink:href', 'friends_bw.jpg')
+	.attr('width', width)
+	.attr('height', width);
+
 var truPos = svg.append('rect'),
-	falNeg = svg.append('rect'),
+	falNeg = svg.append('rect')
+		.attr('class', 'fal_neg'),
 	falPos = svg.append('rect'),
-	truNeg = svg.append('rect'),
+	truNeg = svg.append('rect')
+		.attr('class', 'tru_neg')
+		.attr('fill', '#CCC'),
 
 	rLabel = svg.append('text')
 		.text(frames[0].R)
@@ -52,47 +81,53 @@ var truPos = svg.append('rect'),
 		.text(frames[0].U)
 		.style('opacity', 0);
 
-svg.selectAll('rect').attr('fill','#CCC');
 
-function plot(i, delay) {
+function plot(i, advance, delay) {
   var frame = frames[i],
 		sU = scale(frame.U),
 		sV = scale(frame.V),
 		sR = scale(frame.R),
 
-		posNoTestColor = '#000',
-		negNoTestColor = '#CCC',
-		conPosNoTest = [1],
-		conNegNoTest = [0,1,2]
+		noTestColor = '#CCC',
+		posColor = '#C00',
+		negColor = '#060'
 		;
 
+	var testNegOn = (i !== 4);
+
+	posImage.transition().delay(delay).duration(rectDuration)
+		.attr('y', width - sV)
+		.style('opacity', testNegOn ? 1 : 0);
   truPos.transition().delay(delay).duration(rectDuration)
     .attr('y', width - sV)
     .attr('height', sV)
     .attr('width', sR)
-    // .attr('fill', i ? '#C00': negNoTestColor);
-    .attr('fill', conPosNoTest.indexOf(i) + 1 ? posNoTestColor:'#C00');
+    .attr('fill', posColor);
 
-  falNeg.transition().delay(delay).duration(rectDuration)
+  svg.selectAll('.fal_neg').transition().delay(delay).duration(rectDuration)
     .attr('y', width)
     .attr('height', width - sV)
     .attr('width', sR)
-    // .attr('fill', i ? '#FAA': negNoTestColor);
-    .attr('fill', conPosNoTest.indexOf(i) + 1 ? posNoTestColor:'#FAA');
+    .attr('fill', '#F77') // previously #FAA
+		.style('opacity', testNegOn ? 0.65 : 0);
 
+	negImage.transition().delay(delay).duration(rectDuration)
+		.attr('y', sU)
+		.style('opacity', testNegOn ? 1 : 0);
   falPos.transition().delay(delay).duration(rectDuration)
     .attr('x', sR)
     .attr('y', sU)
     .attr('height', width - sU)
     .attr('width', width - sR)
-    .attr('fill', conNegNoTest.indexOf(i) + 1 ? negNoTestColor:'#060');
+    .attr('fill', negColor);
 
-	truNeg.transition().delay(delay).duration(rectDuration)
+	svg.selectAll('.tru_neg').transition().delay(delay).duration(rectDuration)
 		.attr('x', sR)
 		.attr('y', width)
 		.attr('height', sU)
 		.attr('width', width - sR)
-		.attr('fill',  conNegNoTest.indexOf(i) + 1 ? negNoTestColor:'#AFA');
+		.attr('fill',  i === 0 ? noTestColor:'#AFA')
+		.style('opacity', testNegOn ? 0.5 : 0);
 
 	function runNumber(that, end, decimal) {
 		return function() {
@@ -176,16 +211,16 @@ function labelsPrep(i, advance, delay) {
 
 		return toggled;
 	}
-	
-	var rToggled = labelSwitch(rLabel,[1],[1,5,6]);
-	var vToggled = labelSwitch(vLabel,[2],[2]);
-	var uToggled = labelSwitch(uLabel,[3],[3]);
+
+	var rToggled = labelSwitch(rLabel,[1,4,5],[1,5,6]);
+	var vToggled = labelSwitch(vLabel,[2,4,5],[2]);
+	var uToggled = labelSwitch(uLabel,[3,4,5],[3]);
 
 	return rToggled || vToggled || uToggled ?
 		500 : 0;
 }
 
-plot(0,0);
+plot(0,1,0);
 var i = 0;
 d3.selectAll("div button").data([-1, 1]).on('click', function(d) {
 	i = i+d;
@@ -197,9 +232,9 @@ d3.selectAll("div button").data([-1, 1]).on('click', function(d) {
 
 	if ((d === 1 && i !== 0) || (d === -1 && i === frames.length-1)) {
 		var rectDelay = labelsPrep(i,d,0);
-		plot(i,rectDelay);
+		plot(i,d, rectDelay);
 	} else {
-		plot(i, 0);
+		plot(i,d, 0);
 		labelsPrep(i,d, rectDuration);
 	}
 });
