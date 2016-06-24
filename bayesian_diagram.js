@@ -27,23 +27,42 @@ var frames = [
 ];
 
 var fontShiftDuration = 500,
-		rectDuration = 1000
-			;
+		rectDuration = 1000,
+		textDuration = 500,
+		interDelay = 500;
 
 var scale = d3.scale.linear()
   .domain([0,100])
   .range([0,width]);
 
-// var div = d3.se
-var svg = d3.select('body').append('svg')
+var container = d3.select('body').append('div')
+	.attr('id', 'container')
+	.style('position', 'relative')
+	.style('margin', 0)
+	.style('padding', 0);
+
+var svg = container.append('svg')
 	.attr('xmlns', 'http://www.w3.org/2000/svg')
-	.attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+	.attr('xmln:xlink', 'http://www.w3.org/1999/xlink')
   .style('border', '1px solid black')
   .attr("width", width + margin.left + margin.right)
   .attr("height", height + margin.top + margin.bottom)
 
   .append("g")
   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var offset = {top: 20, bottom: 10};
+var textbox = container.append('div')
+	.attr('id', 'textbox')
+	.style('position', 'absolute')
+	.style('box-sizing', 'border-box')
+	.style('top', margin.top + offset.top + 'px')
+	.style('left', width/2 + margin.left + 'px')
+	.style('width', width/2 + 'px')
+	.style('height', width - offset.top - offset.bottom + 'px')
+	// .style('background', '#EEE')
+	.style('padding', '0 0 0 5px')
+	.style('margin', 0);
 
 var defs = svg.append('defs');
 defs.append('clipPath')
@@ -86,6 +105,7 @@ var truPos = svg.append('rect'),
 
 
 function plot(i, advance, delay) {
+	delay += textDuration + interDelay;
   var frame = frames[i],
 		sU = scale(frame.U),
 		sV = scale(frame.V),
@@ -181,6 +201,7 @@ vLabel.strong = false;
 uLabel.strong = false;
 
 function labelsPrep(i, advance, delay) {
+	delay += textDuration + interDelay;
 	var lastFrame = frames.length-1;
 
 	function labelSwitch(label,onToggle,strongFrames) {
@@ -234,8 +255,22 @@ function labelsPrep(i, advance, delay) {
 		500 : 0;
 }
 
-plot(0,1,0);
+function textEnter(i,delay) {
+	textbox.transition().duration(textDuration)
+		.style('opacity', 0)
+		.each('end', function() {
+			d3.select(this)
+				.html(frames[i].text)
+				.transition().duration(textDuration)
+					.delay(delay - textDuration + interDelay)
+					.style('opacity', 1);
+		});
+}
+
 var i = 0;
+plot(i,1,0);
+textbox.html(frames[i].text);
+
 d3.selectAll("div button").data([-1, 1]).on('click', function(d) {
 	i = i+d;
 	if (i >= frames.length) {i = 0;
@@ -243,12 +278,14 @@ d3.selectAll("div button").data([-1, 1]).on('click', function(d) {
 	else if (i < 0) {
 		i = frames.length-1;
 	}
-
+	var labelDuration;
+// label must transition first if advancing, second otherwise.
 	if ((d === 1 && i !== 0) || (d === -1 && i === frames.length-1)) {
-		var rectDelay = labelsPrep(i,d,0);
-		plot(i,d, rectDelay);
+		labelDuration = labelsPrep(i,d,0);
+		plot(i,d, labelDuration);
 	} else {
 		plot(i,d, 0);
-		labelsPrep(i,d, rectDuration);
+		labelDuration = labelsPrep(i,d, rectDuration);
 	}
+	textEnter(i, labelDuration + rectDuration);
 });
