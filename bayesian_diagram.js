@@ -20,8 +20,10 @@ var frames = [
 	"&hellip; and 1.6% of the healthy group to test positive, given the test's specificity."},
 	{V:V, U:U, R:R, text:
 	"Among positive testers (looking like half a plus sign on the plot), the red porpotion represents the test's positive predictive value (PPV) of 30%, wwhich means a false positive of as high as"},
+	{V:V, U:U, R:R},
 	{V:V, U:U, R:R_young},
 	{V:V, U:U, R:R_black},
+	{V:V, U:U, R:50},
 ];
 
 var fontShiftDuration = 500,
@@ -32,6 +34,7 @@ var scale = d3.scale.linear()
   .domain([0,100])
   .range([0,width]);
 
+// var div = d3.se
 var svg = d3.select('body').append('svg')
 	.attr('xmlns', 'http://www.w3.org/2000/svg')
 	.attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
@@ -89,15 +92,26 @@ function plot(i, advance, delay) {
 		sR = scale(frame.R),
 
 		noTestColor = '#CCC',
-		posColor = '#C00',
-		negColor = '#060'
+		posColor = '#D00',
+		negColor = '#070'
 		;
 
 	var testNegOn = (i !== 4);
 
+	function imageSwitch(selection) {
+		selection
+		.style('opacity', testNegOn ? 1 : 0)
+		.attr('xlink:href', function(){
+			if (i === 6) { return 'girls_bw.jpg';
+			} else if (i === 7) { return 'tlc_bw.jpg';
+			} else if (i === 8) { return 'kardashian_bw.jpg';
+			} else { return 'friends_bw.jpg';}
+		});
+	}
+
 	posImage.transition().delay(delay).duration(rectDuration)
 		.attr('y', width - sV)
-		.style('opacity', testNegOn ? 1 : 0);
+		.call(imageSwitch);
   truPos.transition().delay(delay).duration(rectDuration)
     .attr('y', width - sV)
     .attr('height', sV)
@@ -108,12 +122,12 @@ function plot(i, advance, delay) {
     .attr('y', width)
     .attr('height', width - sV)
     .attr('width', sR)
-    .attr('fill', '#F77') // previously #FAA
-		.style('opacity', testNegOn ? 0.65 : 0);
+    .attr('fill', '#F99') // previously #FAA
+		.style('opacity', testNegOn ? 0.7 : 0);
 
 	negImage.transition().delay(delay).duration(rectDuration)
 		.attr('y', sU)
-		.style('opacity', testNegOn ? 1 : 0);
+		.call(imageSwitch);
   falPos.transition().delay(delay).duration(rectDuration)
     .attr('x', sR)
     .attr('y', sU)
@@ -126,8 +140,8 @@ function plot(i, advance, delay) {
 		.attr('y', width)
 		.attr('height', sU)
 		.attr('width', width - sR)
-		.attr('fill',  i === 0 ? noTestColor:'#AFA')
-		.style('opacity', testNegOn ? 0.5 : 0);
+		.attr('fill',  i === 0 ? noTestColor:'#BFB')
+		.style('opacity', testNegOn ? 0.6 : 0);
 
 	function runNumber(that, end, decimal) {
 		return function() {
@@ -140,7 +154,7 @@ function plot(i, advance, delay) {
     .attr('x', sR/2)
     .attr('y', width - sV - 5)
     .attr('text-anchor', 'middle')
-		.tween('text', runNumber(rLabel,frames[i].R, 2))
+		.tween('text', runNumber(rLabel,frames[i].R, [7,8].indexOf(i) !== -1 ? 1 : 2))
 		;
 
 	vLabel.transition().delay(delay)
@@ -212,7 +226,7 @@ function labelsPrep(i, advance, delay) {
 		return toggled;
 	}
 
-	var rToggled = labelSwitch(rLabel,[1,4,5],[1,5,6]);
+	var rToggled = labelSwitch(rLabel,[1,4,5],[1,5,6,7,8]);
 	var vToggled = labelSwitch(vLabel,[2,4,5],[2]);
 	var uToggled = labelSwitch(uLabel,[3,4,5],[3]);
 
