@@ -1,5 +1,5 @@
 "use strict";
-var margin = {top: 20, right: 70, bottom: 20, left: 70},
+var margin = {top: 20, right: 75, bottom: 20, left: 70},
     width = 300,
     height = width*2;
 
@@ -9,21 +9,38 @@ var V =	92.5, // Sensitivity
   R_young = 1.87, // WF 18-24
   R_black = 10.49; // BF 18-24
 
+function PPV(V,U,R) {
+	return V*R*100/(V*R + (100-U)*(100-R));
+}
 var frames = [
 	{V:0, U:100, R:0, text:
-	'Let the square represent white American women aged 25 &ndash; 29.'},
+	"Let the square represent <strong>white American women aged 25&ndash;29</strong>."},
 	{V:0, U:100, R:R, text:
-	'0.65% of these women have Chlamydia.'},
+	"The red portion represents those infected with <strong>chlamydia</strong>.<br/><br/>" +
+	"Let’s see what happens if we subject the entire demographic to <em>mandatory screening</em>."},
 	{V:V, U:100, R:R, text:
-	"If testing is mandatory, 92.5% of the infected group can be expected to test positive, given the test's sensitivity&hellip;"},
+	"Given the test’s <strong>sensitivity</strong>, " +V+ "% of the infected group can be expected to test positive, as shown in deep red."},
 	{V:V, U:U, R:R, text:
-	"&hellip; and 1.6% of the healthy group to test positive, given the test's specificity."},
+	"And given the test’s <strong>specificity</strong>, 100 &minus; " +U+
+		" = " +(100-U).toFixed(1)+ "% of the <em>healthy</em> group can also be expected to test positive, as shown in deep green."},
 	{V:V, U:U, R:R, text:
-	"Among positive testers (looking like half a plus sign on the plot), the red porpotion represents the test's positive predictive value (PPV) of 30%, wwhich means a false positive of as high as"},
-	{V:V, U:U, R:R},
-	{V:V, U:U, R:R_young},
-	{V:V, U:U, R:R_black},
-	{V:V, U:U, R:50},
+	"Among the positive testers (looking like half a plus sign), <strong>true positives</strong> (red) make up only " +PPV(V,U,R).toFixed(0)+
+	"%, which means that <strong>false positives</strong> (green) are as high as " +(100 - PPV(V,U,R)).toFixed(0)+ "%!" },
+	{V:V, U:U, R:R, text:
+	"This surprising result is due to the low <strong>prevalence rate</strong>.<br/><br/>" +
+	"To illustrate, let’s do the same analysis on a demographic with a higher prevalence of chlamydia."},
+	{V:V, U:U, R:R_young, text:
+	"Change the age group to <strong>18&ndash;24</strong> (still white American women), " +
+	"and false positives drop to " +(100 - PPV(V,U,R_young)).toFixed(0)+ "% thanks to higher prevalence."},
+	{V:V, U:U, R:R_black, text:
+	"Change the racial group to <strong>black</strong> on top of that, and false positives are down to " +(100 - PPV(V,U,R_black)).toFixed(0)+ "%.<br/><br/>" +
+	"Even here, the net is still cast too wide. In real life, there is no mandatory screening for chlamydia. " + 
+	"You get tested only if you have symptoms or risk factors such as having an infected partner."},
+	{V:V, U:U, R:50, text:
+	"If, say, half of this suspect group have chlamydia, then a positive result is highly dispositive. " +
+	"Expected false positives are only " +(100 - PPV(V,U,50)).toFixed(0)+ 
+	"%, or a positive prediction value (PPV) of " +PPV(V,U,50).toFixed(0)+ "%!<br/><br/>" +
+	"<strong>Moral of the story:</strong> Testing works well if and only if you know when to use it."}
 ];
 
 var fontShiftDuration = 500,
@@ -60,8 +77,7 @@ var textbox = container.append('div')
 	.style('left', width/2 + margin.left + 'px')
 	.style('width', width/2 + 'px')
 	.style('height', width - offset.top - offset.bottom + 'px')
-	// .style('background', '#EEE')
-	.style('padding', '0 0 0 5px')
+	.style('padding', '10px 0 0 8px')
 	.style('margin', 0);
 
 var defs = svg.append('defs');
@@ -176,17 +192,18 @@ function plot(i, advance, delay) {
 		.tween('text', runNumber(rLabel,frames[i].R, [7,8].indexOf(i) !== -1 ? 1 : 2))
 		;
 
-	vLabel.transition().delay(delay)
-			.duration(rectDuration)
-			.attr('y', width - sV/2 + 7) .attr('x', -10)
-			.attr('text-anchor', 'end')
-			.tween('text', runNumber(vLabel, frames[i].V, 1))
-			;
+	vLabel.transition().delay(delay).duration(rectDuration)
+		.attr('y', width - sV/2) .attr('x', -10)
+		.attr('text-anchor', 'end')
+		.attr('alignment-baseline', 'middle')
+		.tween('text', runNumber(vLabel, frames[i].V, 1))
+		;
 
 	uLabel.transition().delay(delay).duration(rectDuration)
 		.attr('x', width + 10)
 		.attr('y', width + sU/2)
 		.attr('text-anchor', 'start')
+		.attr('alignment-baseline', 'middle')
 		.tween('text', runNumber(uLabel, frames[i].U, 1))
 		;
 	return delay + rectDuration;
