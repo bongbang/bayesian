@@ -12,7 +12,7 @@ var V =	92.5, // Sensitivity
 var frames = [
 	{V:0, U:100, R:0, text:
 	'Let the square represent white American women aged 25 &ndash; 29.'},
-	{V:0, U:100, R:R, text: 
+	{V:0, U:100, R:R, text:
 	'0.65% of these women have Chlamydia.'},
 	{V:V, U:100, R:R, text:
 	"If testing is mandatory, 92.5% of the infected group can be expected to test positive, given the test's sensitivity&hellip;"},
@@ -105,7 +105,6 @@ var truPos = svg.append('rect'),
 
 
 function plot(i, advance, delay) {
-	delay += textDuration + interDelay;
   var frame = frames[i],
 		sU = scale(frame.U),
 		sV = scale(frame.V),
@@ -190,7 +189,7 @@ function plot(i, advance, delay) {
 		.attr('text-anchor', 'start')
 		.tween('text', runNumber(uLabel, frames[i].U, 1))
 		;
-
+	return delay + rectDuration;
 }
 
 rLabel.on = false;
@@ -201,7 +200,7 @@ vLabel.strong = false;
 uLabel.strong = false;
 
 function labelsPrep(i, advance, delay) {
-	delay += textDuration + interDelay;
+	// delay += interDelay;
 	var lastFrame = frames.length-1;
 
 	function labelSwitch(label,onToggle,strongFrames) {
@@ -252,19 +251,12 @@ function labelsPrep(i, advance, delay) {
 	var uToggled = labelSwitch(uLabel,[3,4,5],[3]);
 
 	return rToggled || vToggled || uToggled ?
-		500 : 0;
+		fontShiftDuration + delay : 0;
 }
 
-function textEnter(i,delay) {
-	textbox.transition().duration(textDuration)
-		.style('opacity', 0)
-		.each('end', function() {
-			d3.select(this)
-				.html(frames[i].text)
-				.transition().duration(textDuration)
-					.delay(delay - textDuration + interDelay)
-					.style('opacity', 1);
-		});
+function textEnter(delay) {
+	textbox.transition().duration(textDuration).delay(delay)
+		.style('opacity', 1);
 }
 
 var i = 0;
@@ -278,14 +270,22 @@ d3.selectAll("div button").data([-1, 1]).on('click', function(d) {
 	else if (i < 0) {
 		i = frames.length-1;
 	}
-	var labelDuration;
-// label must transition first if advancing, second otherwise.
-	if ((d === 1 && i !== 0) || (d === -1 && i === frames.length-1)) {
-		labelDuration = labelsPrep(i,d,0);
-		plot(i,d, labelDuration);
-	} else {
-		plot(i,d, 0);
-		labelDuration = labelsPrep(i,d, rectDuration);
-	}
-	textEnter(i, labelDuration + rectDuration);
+
+	textbox.transition().duration(textDuration)
+		.style('opacity', 0)
+		.each('end', function() {
+			textbox.html(frames[i].text);
+
+			var labelTotal, rectTotal, innerTotal;
+		// label must transition first if advancing, second otherwise.
+			if ((d === 1 && i !== 0) || (d === -1 && i === frames.length-1)) {
+				labelTotal = labelsPrep(i,d,interDelay);
+				innerTotal = plot(i,d, labelTotal);
+			} else {
+				rectTotal = plot(i,d, interDelay);
+				innerTotal = labelsPrep(i,d, rectTotal);
+			}
+			textEnter(innerTotal + textDuration);
+		});
+
 });
