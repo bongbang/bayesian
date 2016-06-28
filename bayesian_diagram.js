@@ -16,7 +16,7 @@ var frames = [
 	{V:0, U:100, R:0, text:
 	"Let the square represent <strong>white American women aged 25&ndash;29</strong>."},
 	{V:0, U:100, R:R, text:
-	"The red portion represents those infected with <strong>chlamydia</strong>.<br/><br/>" +
+	"The red slice represents those infected with <strong>chlamydia</strong>.<br/><br/>" +
 	"Let’s see what happens if we subject the entire demographic to <em>mandatory screening</em>."},
 	{V:V, U:100, R:R, text:
 	"Given the test’s <strong>sensitivity</strong>, " +V+ "% of the infected group can be expected to test positive, as shown in deep red."},
@@ -39,7 +39,7 @@ var frames = [
 	{V:V, U:U, R:50, text:
 	"If, say, half of this suspect group have chlamydia, then a positive result is highly dispositive. " +
 	"Expected false positives are only " +(100 - PPV(V,U,50)).toFixed(0)+
-	"%, or a positive prediction value (PPV) of " +PPV(V,U,50).toFixed(0)+ "%!<br/><br/>" +
+	"%, and the positive prediction value (PPV) is " +PPV(V,U,50).toFixed(0)+ "%!<br/><br/>" +
 	"<strong>Moral of the story:</strong> Testing works well if and only if you know when to use it."}
 ];
 
@@ -59,17 +59,6 @@ var container = d3.select('body').append('div')
 	.style('margin', 0)
 	.style('padding', 0);
 
-container.append('svg')
-  .style('border', '1px solid #CCC')
-  .attr("width", width + margin.left + margin.right)
-  .attr("height", height + margin.top + margin.bottom)
-
-	.append('style')
-	.text('g.button:hover use {fill: #000;}');
-
-var svg = container.select('svg').append("g")
-  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
 var offset = {top: 20, bottom: 10}; // textbox tweak
 var textbox = container.append('div')
 	.attr('id', 'textbox')
@@ -81,6 +70,18 @@ var textbox = container.append('div')
 	.style('height', width - offset.top - offset.bottom + 'px')
 	.style('padding', '10px 0 0 8px')
 	.style('margin', 0);
+
+container.append('svg')
+  // .style('border', '1px solid #CCC')
+  .attr("width", width + margin.left + margin.right)
+  .attr("height", height + margin.top + margin.bottom)
+
+	.append('style')
+	.text('g.button:hover use {fill: #000;}');
+
+var svg = container.select('svg').append("g")
+  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
 
 var defs = svg.append('defs');
 defs.append('clipPath')
@@ -114,7 +115,7 @@ defs.append('symbol')
 var buttonsPlace = svg.append('g')
 	.attr('transform', 'translate(' + width + ', ' + -margin.top + ')');
 
-var buttonWidth = 20;
+var buttonWidth = 25;
 var buttons = buttonsPlace.selectAll('g.button')
 	.data([-1, 1])
 	.enter()
@@ -347,7 +348,7 @@ var i = 0;
 plot(i,1,0);
 textbox.html(frames[i].text);
 
-d3.selectAll("div button").data([-1, 1]).on('click', function(d) {
+buttons.on('click', function(d) {
 	i = i+d;
 	if (i >= frames.length) {i = 0;
 	}
