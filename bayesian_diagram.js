@@ -9,11 +9,11 @@ var V =	92.5, // Sensitivity
   R_young = 1.87, // WF 18-24
   R_black = 10.49; // BF 18-24
 
-function PPV(V,U,R) {
+function PPV(V,U,R) { // positive predictive value
 	return V*R*100/(V*R + (100-U)*(100-R));
 }
 
-function makeFrame(V,U,R,text) {
+function makeFrame(V,U,R,text) { // factory function
 	var frame = {
 		V: V,
 		U: U,
@@ -53,6 +53,20 @@ var frames = [
 	"%, and the positive prediction value (PPV) is " +PPV(V,U,50).toFixed(0)+ "%!<br/><br/>" +
 	"<strong>Moral of the story:</strong> Testing works well if and only if you know when to use it.")
 ];
+
+frames.addElement = function(element, frames, flip) {
+	if (flip === 'off') {
+		var a = false, b = true;
+	} else {
+		var a = true, b = false;
+	}
+
+	for (var i=0; i < this.length; i++) {
+		this[i][element] = frames.indexOf[i] !== -1 ? a : b;
+	}
+};
+
+frames.addElement('plusMinus',[0,1,4],'off');
 
 var fontShiftDuration = 500,
 		rectDuration = 1000,
@@ -203,6 +217,7 @@ var plusMinus = svg.append('g')
 	.append('text')
 	.attr('y', function(d,i) {return (i-0.5)*3;})
 	.attr('text-anchor', 'end')
+	.attr('opacity', 0)
 	.attr('alignment-baseline', function(d,i) {
 		return i === 0 ? 'text-after-edge' : 'text-before-edge';
 	})
@@ -391,7 +406,7 @@ buttons.on('click', function(d) {
 	}
 
 	// function plusMinus() {
-	// 	if 
+	// 	if
 	// "Turn off" buttons and text
 	nextButton.attr('fill', iconColor);
 	textbox.transition().duration(textDuration)
