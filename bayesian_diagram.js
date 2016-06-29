@@ -62,11 +62,11 @@ frames.addElement = function(element, frames, flip) {
 	}
 
 	for (var i=0; i < this.length; i++) {
-		this[i][element] = frames.indexOf[i] !== -1 ? a : b;
+		this[i][element] = frames.indexOf(i) !== -1 ? a : b;
 	}
 };
 
-frames.addElement('plusMinus',[0,1,4],'off');
+frames.addElement('showPlusMinus',[0,1,4],'off');
 
 var fontShiftDuration = 500,
 		rectDuration = 1000,
@@ -311,8 +311,7 @@ function plot(i, advance, delay) { // Plotting workhorse
 		.tween('text', runNumber(uLabel, frames[i].U, 1))
 		;
 	return delay + rectDuration;
-}
-
+} 
 // Where labels need to appear/disappear before or after plot transition
 rLabel.on = false;
 vLabel.on = false;
@@ -392,7 +391,8 @@ textbox.html(frames[i].text);
 textEnter(rectDuration);
 
 buttons.on('click', function(d) {
-	i = i+d;
+	var iOld = i;
+	i += d;
 	if (i >= frames.length) {i = 0;
 	}
 	else if (i < 0) {
@@ -409,12 +409,13 @@ buttons.on('click', function(d) {
 	// 	if
 	// "Turn off" buttons and text
 	nextButton.attr('fill', iconColor);
+
 	textbox.transition().duration(textDuration)
 		.style('opacity', 0)
 		.each('end', function() {
 			textbox.html(frames[i].text);
 
-			var labelTotal, rectTotal, innerTotal;
+		var labelTotal, rectTotal, innerTotal;
 		// label must transition first if advancing, second otherwise.
 			if ((d === 1 && i !== 0) || (d === -1 && i === frames.length-1)) {
 				labelTotal = labelsPrep(i,d,interDelay);
@@ -425,4 +426,15 @@ buttons.on('click', function(d) {
 			}
 			textEnter(innerTotal + textDuration);
 		});
+
+	if (frames[i].showPlusMinus !== frames[iOld].showPlusMinus) {
+		if (frames[i].showPlusMinus) {
+			plusMinus.transition().duration(textDuration)
+				.delay(rectDuration + textDuration) // wait for rect plot to finish
+				.attr('opacity', 1);
+		} else {
+			plusMinus.transition().duration(textDuration)
+				.attr('opacity', 0);
+		}
+	}
 });
