@@ -12,35 +12,46 @@ var V =	92.5, // Sensitivity
 function PPV(V,U,R) {
 	return V*R*100/(V*R + (100-U)*(100-R));
 }
+
+function makeFrame(V,U,R,text) {
+	var frame = {
+		V: V,
+		U: U,
+		R: R,
+		text: text
+	};
+	return frame;
+}
+
 var frames = [
-	{V:0, U:100, R:0, text:
-	"Let the square represent <strong>white American women aged 25&ndash;29</strong>."},
-	{V:0, U:100, R:R, text:
-	"The red slice represents those infected with <strong>chlamydia</strong>.<br/><br/>" +
-	"Let’s see what happens if we subject the entire demographic to <em>mandatory screening</em>."},
-	{V:V, U:100, R:R, text:
-	"Given the test’s <strong>sensitivity</strong>, " +V+ "% of the infected group can be expected to test positive, as shown in deep red."},
-	{V:V, U:U, R:R, text:
+	makeFrame(0,100,0,
+		"Let the square represent <strong>white American women aged 25&ndash;29</strong>."),
+	makeFrame(0,100,R,
+		"The red slice represents those infected with <strong>chlamydia</strong>.<br/><br/>" +
+	"Let’s see what happens if we subject the entire demographic to <em>mandatory screening</em>."),
+	makeFrame(V,100,R,
+	"Given the test’s <strong>sensitivity</strong>, " +V+ "% of the infected group can be expected to test positive, as shown in deep red."),
+	makeFrame(V,U,R,
 	"And given the test’s <strong>specificity</strong>, 100 &minus; " +U+
-		" = " +(100-U).toFixed(1)+ "% of the <em>healthy</em> group can also be expected to test positive, as shown in deep green."},
-	{V:V, U:U, R:R, text:
-	"Among the positive testers (looking like half a plus sign), <strong>true positives</strong> (red) make up only " +PPV(V,U,R).toFixed(0)+
-	"%, which means that <strong>false positives</strong> (green) are as high as " +(100 - PPV(V,U,R)).toFixed(0)+ "%!" },
-	{V:V, U:U, R:R, text:
+		" = " +(100-U).toFixed(1)+ "% of the <em>healthy</em> group can also be expected to test positive, as shown in deep green."),
+	makeFrame(V,U,R,
+	"Among the positive testers (looking like half a plus sign, <strong>true positives</strong> (red) make up only " +PPV(V,U,R).toFixed(0)+
+	"%, which means that <strong>false positives</strong> (green) are as high as " +(100 - PPV(V,U,R)).toFixed(0)+ "%!" ),
+	makeFrame(V,U,R,
 	"This surprising result is due to the low <strong>prevalence rate</strong>.<br/><br/>" +
-	"To illustrate, let’s do the same analysis on a demographic with a higher prevalence of chlamydia."},
-	{V:V, U:U, R:R_young, text:
-	"Change the age group to <strong>18&ndash;24</strong> (still white American women), " +
-	"and false positives drop to " +(100 - PPV(V,U,R_young)).toFixed(0)+ "% thanks to higher prevalence."},
-	{V:V, U:U, R:R_black, text:
+	"To illustrate, let’s do the same analysis on a demographic with a higher prevalence of chlamydia."),
+	makeFrame(V,U,R_young,
+	"Change the age group to <strong>18&ndash;24</strong> (still white American women, " +
+	"and false positives drop to " +(100 - PPV(V,U,R_young)).toFixed(0)+ "% thanks to higher prevalence."),
+	makeFrame(V,U,R_black,
 	"Change the racial group to <strong>black</strong> on top of that, and false positives are down to " +(100 - PPV(V,U,R_black)).toFixed(0)+ "%.<br/><br/>" +
 	"Even here, the net is still cast too wide. In real life, there is no mandatory screening for chlamydia. " +
-	"You get tested only if you have symptoms or risk factors such as having an infected partner."},
-	{V:V, U:U, R:50, text:
+	"You get tested only if you have symptoms or risk factors such as having an infected partner."),
+	makeFrame(V,U,50,
 	"If, say, half of this suspect group have chlamydia, then a positive result is highly dispositive. " +
 	"Expected false positives are only " +(100 - PPV(V,U,50)).toFixed(0)+
 	"%, and the positive prediction value (PPV) is " +PPV(V,U,50).toFixed(0)+ "%!<br/><br/>" +
-	"<strong>Moral of the story:</strong> Testing works well if and only if you know when to use it."}
+	"<strong>Moral of the story:</strong> Testing works well if and only if you know when to use it.")
 ];
 
 var fontShiftDuration = 500,
