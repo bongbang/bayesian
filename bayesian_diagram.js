@@ -1,5 +1,5 @@
 "use strict";
-var margin = {top: 20, right: 75, bottom: 20, left: 70},
+var margin = {top: 20, right: 75, bottom: 10, left: 70},
     width = 300,
     height = width*2;
 
@@ -71,7 +71,8 @@ frames.addElement('showPlusMinus',[0,1,4],'off');
 var fontShiftDuration = 500,
 		rectDuration = 1000,
 		textDuration = 500,
-		interDelay = 500;
+		interDelay = 500,
+		fontStyle = "400 14px 'Helvetica Neue', Helvetica, Arial, sans-serif";
 
 var scale = d3.scale.linear()
   .domain([0,100])
@@ -80,7 +81,8 @@ var scale = d3.scale.linear()
 var container = d3.select('body').append('div')
 	.attr('id', 'container')
 	.style('position', 'relative')
-	.style('font', "400 14px 'Helvetica Neue', Helvetica, Arial, sans-serif")
+	.style('font',fontStyle)
+  .style('width', width + margin.left + margin.right + 'px')
 	.style('margin', 0)
 	.style('padding', 0);
 
@@ -95,7 +97,8 @@ var textbox = container.append('div')
 	.style('height', width - offset.top - offset.bottom + 'px')
 	.style('opacity', 0)
 	.style('padding', '10px 0 0 8px')
-	.style('margin', 0);
+	.style('margin', 0)
+	.style('z-index', 1);
 
 container.append('svg')
   // .style('border', '1px solid #CCC')
@@ -103,9 +106,13 @@ container.append('svg')
   .attr("height", height + margin.top + margin.bottom)
 
 	.append('style')
-	.text('#buttonsPlace g.button:hover use {fill: #000;}' +
-			'g.button:active rect {fill: #EEE;}' +
-			'#buttonsPlace:hover g use {fill: #CCC;}');
+	.text(
+		// 'text {font: ' + fontStyle + ';}' +
+		'#buttonsPlace g.button:hover use {fill: #000;}' +
+		'g.button {cursor: pointer}' +
+		'g.button:active rect {fill: #EEE;}' +
+		'#buttonsPlace:hover g use {fill: #CCC;}'
+		);
 
 var svg = container.select('svg').append("g")
   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -154,9 +161,7 @@ var buttons = buttonsPlace.selectAll('g.button')
 	.attr('transform', function(d,i) {
 		return 'translate(' + i*buttonWidth + ',0)';
 	})
-	.attr('class', 'button')
-	.style('cursor', 'pointer');
-
+	.attr('class', 'button');
 
 buttons.append('rect')
 	.attr('width', buttonWidth)
@@ -184,7 +189,7 @@ var posImage = svg.append('image')
 		negImage = svg.append('image')
 			.attr('clip-path', 'url(#negative_clip)');
 svg.selectAll('image')
-	.attr('xlink:href', 'friends_bw.jpg')
+	.attr('xlink:href', 'images/friends_bw.jpg')
 	.attr('width', width)
 	.attr('height', width);
 
@@ -223,6 +228,18 @@ var plusMinus = svg.append('g')
 	})
 	.html(function(d) {return d;});
 
+// Sources
+
+container.append('p')
+	// .attr('x', -20)
+	// .attr('y', width*2 + 10)
+	// .attr('alignment-baseline', 'text-before-edge')
+	.style('font-size', '12px')
+	.style('color', '#666')
+	.html('Sources: <a href="http://www.cdc.gov/nchs/nhanes/">NHANES</a>, 2001&ndash;12 (prevalence). ' + 
+			'Cook et al., <a href="http://www.ncbi.nlm.nih.gov/pubmed/15941699">Ann Intern Med.</a>, 2005 (sensitivity & specificity). ' +
+			'<em>See also</em> Miller et al., <a href="http://jama.jamanetwork.com/article.aspx?articleid=198722#REF-JOC32386-20">J Am Med Assoc.</a>, 2004.');
+
 function plot(i, advance, delay) { // Plotting workhorse
   var frame = frames[i],
 		sU = scale(frame.U),
@@ -240,10 +257,10 @@ function plot(i, advance, delay) { // Plotting workhorse
 		selection
 		.attr('opacity', testNegOn ? 1 : 0)
 		.attr('xlink:href', function(){
-			if (i === 6) { return 'girls_bw.jpg';
-			} else if (i === 7) { return 'tlc_bw.jpg';
-			} else if (i === 8) { return 'kardashian_bw.jpg';
-			} else { return 'friends_bw.jpg';}
+			if (i === 6) { return 'images/girls_bw.jpg';
+			} else if (i === 7) { return 'images/tlc_bw.jpg';
+			} else if (i === 8) { return 'images/kardashian_bw.jpg';
+			} else { return 'images/friends_bw.jpg';}
 		});
 	}
 
@@ -383,6 +400,7 @@ function textEnter(delay) {
 			.attr('fill', 'orange');
 	}
 }
+
 
 // PLOTTING STARTS (w/ function calls)
 var i = 0;
