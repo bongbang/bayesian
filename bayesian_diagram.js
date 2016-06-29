@@ -152,7 +152,7 @@ buttons.append('use')
 	.attr('y', (buttonWidth-iconSize)/2);
 
 var nextButton = 	buttonsPlace.selectAll('g:nth-child(2)').select('use');
-//
+
 // PLOTTING
 var posImage = svg.append('image')
 			.attr('clip-path', 'url(#positive_clip)'),
@@ -182,6 +182,20 @@ var truPos = svg.append('rect'),
   uLabel = svg.append('text')
 		.text(frames[0].U)
 		.attr('opacity', 0);
+
+var plusMinus = svg.append('g')
+	.attr('transform', 'translate(-10,' + width + ')')
+	.selectAll('text')
+	.data(['+', '&minus;'])
+
+	.enter()
+	.append('text')
+	.attr('y', function(d,i) {return (i-0.5)*3;})
+	.attr('text-anchor', 'end')
+	.attr('alignment-baseline', function(d,i) {
+		return i === 0 ? 'text-after-edge' : 'text-before-edge';
+	})
+	.html(function(d) {return d;});
 
 function plot(i, advance, delay) { // Plotting workhorse
   var frame = frames[i],
@@ -365,6 +379,9 @@ buttons.on('click', function(d) {
 		nextButton.attr('xlink:href', '#forward');
 	}
 
+	// function plusMinus() {
+	// 	if 
+	// "Turn off" buttons and text
 	nextButton.attr('fill', iconColor);
 	textbox.transition().duration(textDuration)
 		.style('opacity', 0)
