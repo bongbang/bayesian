@@ -68,6 +68,7 @@ var textbox = container.append('div')
 	.style('left', width/2 + margin.left + 'px')
 	.style('width', width/2 + 'px')
 	.style('height', width - offset.top - offset.bottom + 'px')
+	.style('opacity', 0)
 	.style('padding', '10px 0 0 8px')
 	.style('margin', 0);
 
@@ -77,7 +78,9 @@ container.append('svg')
   .attr("height", height + margin.top + margin.bottom)
 
 	.append('style')
-	.text('g.button:hover use {fill: #000;}');
+	.text('#buttonsPlace g.button:hover use {fill: #000;}' +
+			'g.button:active rect {fill: #EEE;}' +
+			'#buttonsPlace:hover g use {fill: #CCC;}');
 
 var svg = container.select('svg').append("g")
   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -106,16 +109,19 @@ defs.append('symbol')
 	.append('path')
 	.attr('d',"M360.731,229.075l-225.1-225.1c-5.3-5.3-13.8-5.3-19.1,0s-5.3,13.8,0,19.1l215.5,215.5l-215.5,215.5 c-5.3,5.3-5.3,13.8,0,19.1c2.6,2.6,6.1,4,9.5,4c3.4,0,6.9-1.3,9.5-4l225.1-225.1C365.931,242.875,365.931,234.275,360.731,229.075z ");
 
-defs.append('symbol')
+var repeat = defs.append('symbol')
 	.attr('id','repeat')
-	.attr('viewBox', "0 0 489.711 489.711")
-	.append('path')
+	.attr('viewBox', "0 0 489.711 489.711");
+repeat.append('path')
 	.attr('d',"M112.156,97.111c72.3-65.4,180.5-66.4,253.8-6.7l-58.1,2.2c-7.5,0.3-13.3,6.5-13,14c0.3,7.3,6.3,13,13.5,13 c0.2,0,0.3,0,0.5,0l89.2-3.3c7.3-0.3,13-6.2,13-13.5v-1c0-0.2,0-0.3,0-0.5v-0.1l0,0l-3.3-88.2c-0.3-7.5-6.6-13.3-14-13 c-7.5,0.3-13.3,6.5-13,14l2.1,55.3c-36.3-29.7-81-46.9-128.8-49.3c-59.2-3-116.1,17.3-160,57.1c-60.4,54.7-86,137.9-66.8,217.1 c1.5,6.2,7,10.3,13.1,10.3c1.1,0,2.1-0.1,3.2-0.4c7.2-1.8,11.7-9.1,9.9-16.3C36.656,218.211,59.056,145.111,112.156,97.111z");
+repeat.append('path')
+	.attr('d',"M462.456,195.511c-1.8-7.2-9.1-11.7-16.3-9.9c-7.2,1.8-11.7,9.1-9.9,16.3c16.9,69.6-5.6,142.7-58.7,190.7 c-37.3,33.7-84.1,50.3-130.7,50.3c-44.5,0-88.9-15.1-124.7-44.9l58.8-5.3c7.4-0.7,12.9-7.2,12.2-14.7s-7.2-12.9-14.7-12.2l-88.9,8 c-7.4,0.7-12.9,7.2-12.2,14.7l8,88.9c0.6,7,6.5,12.3,13.4,12.3c0.4,0,0.8,0,1.2-0.1c7.4-0.7,12.9-7.2,12.2-14.7l-4.8-54.1 c36.3,29.4,80.8,46.5,128.3,48.9c3.8,0.2,7.6,0.3,11.3,0.3c55.1,0,107.5-20.2,148.7-57.4 C456.056,357.911,481.656,274.811,462.456,195.511z");
 
 var buttonsPlace = svg.append('g')
-	.attr('transform', 'translate(' + width + ', ' + -margin.top + ')');
+	.attr('transform', 'translate(' + width + ', ' + -margin.top + ')')
+	.attr('id', 'buttonsPlace');
 
-var buttonWidth = 25;
+var buttonWidth = 32;
 var buttons = buttonsPlace.selectAll('g.button')
 	.data([-1, 1])
 	.enter()
@@ -126,36 +132,27 @@ var buttons = buttonsPlace.selectAll('g.button')
 	.attr('class', 'button')
 	.style('cursor', 'pointer');
 
-	// .on('mouseover', function() {
-	// 	d3.select(this).select('use')
-	// 	.attr('fill', '#000');
-	// 	d3.select(this).select('rect')
-	// 	.attr('fill', '#DDD');
-	// })
-	// .on('mouseout', function() {
-	// 	d3.select(this).select('use')
-	// 	.attr('fill',iconColor);
-	// 	d3.select(this).select('rect')
-	// 	.attr('fill', 'none');
-	// })
-	// ;
 
 buttons.append('rect')
 	.attr('width', buttonWidth)
 	.attr('height', buttonWidth)
 	.attr('fill', 'transparent');
 
-var iconColor = '#CCC';
+var iconColor = '#CCC',
+		iconSize = 26;
+
 buttons.append('use')
 	.attr('xlink:href', function(d,i) {
 		return (i === 0) ? '#backward' : '#forward';
 	})
-	.attr('width', buttonWidth)
-	.attr('height', buttonWidth)
+	.attr('width', iconSize)
+	.attr('height', iconSize)
 	.attr('fill',iconColor)
-	.attr('x', 0)
-	.attr('y', 0);
+	.attr('x', (buttonWidth-iconSize)/2)
+	.attr('y', (buttonWidth-iconSize)/2);
 
+var nextButton = 	buttonsPlace.selectAll('g:nth-child(2)').select('use');
+//
 // PLOTTING
 var posImage = svg.append('image')
 			.attr('clip-path', 'url(#positive_clip)'),
@@ -341,12 +338,18 @@ function labelsPrep(i, advance, delay) {
 function textEnter(delay) {
 	textbox.transition().duration(textDuration).delay(delay)
 		.style('opacity', 1);
+	if (i !== frames.length-1) {
+		nextButton.transition().duration(500)
+			.delay(delay + textDuration)
+			.attr('fill', 'orange');
+	}
 }
 
 // PLOTTING STARTS (w/ function calls)
 var i = 0;
 plot(i,1,0);
 textbox.html(frames[i].text);
+textEnter(rectDuration);
 
 buttons.on('click', function(d) {
 	i = i+d;
@@ -356,6 +359,13 @@ buttons.on('click', function(d) {
 		i = frames.length-1;
 	}
 
+	if (i === frames.length-1) {
+		nextButton.attr('xlink:href', '#repeat');
+	} else {
+		nextButton.attr('xlink:href', '#forward');
+	}
+
+	nextButton.attr('fill', iconColor);
 	textbox.transition().duration(textDuration)
 		.style('opacity', 0)
 		.each('end', function() {
