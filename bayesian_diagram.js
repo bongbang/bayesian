@@ -236,7 +236,7 @@ container.append('p')
 	// .attr('alignment-baseline', 'text-before-edge')
 	.style('font-size', '12px')
 	.style('color', '#666')
-	.html('Sources: <a href="http://www.cdc.gov/nchs/nhanes/">NHANES</a>, 2001&ndash;12 (prevalence). ' + 
+	.html('Sources: <a href="http://www.cdc.gov/nchs/nhanes/" target="_parent">NHANES</a>, 2001&ndash;12 (prevalence). ' + 
 			'Cook et al., <a href="http://www.ncbi.nlm.nih.gov/pubmed/15941699">Ann Intern Med.</a>, 2005 (sensitivity & specificity). ' +
 			'<em>See also</em> Miller et al., <a href="http://jama.jamanetwork.com/article.aspx?articleid=198722#REF-JOC32386-20">J Am Med Assoc.</a>, 2004.');
 
