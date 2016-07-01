@@ -13,7 +13,7 @@ function PPV(V,U,R) { // positive predictive value
 	return V*R*100/(V*R + (100-U)*(100-R));
 }
 
-function makeFrame(V,U,R,text) { // factory function
+function makeFrame(V,U,R,text) { // frame factory 
 	var frame = {
 		V: V,
 		U: U,
@@ -54,16 +54,16 @@ var frames = [
 	"<strong>Moral of the story:</strong> Testing works well if and only if you know when to use it.")
 ];
 
-frames.addElement = function(element, frames, flip) {
+frames.addElement = function(element, keyFrames, flip) {
 	if (flip === 'off') {
 		var a = false, b = true;
 	} else {
 		var a = true, b = false;
 	}
 
-	for (var i=0; i < this.length; i++) {
-		this[i][element] = frames.indexOf(i) !== -1 ? a : b;
-	}
+	this.forEach(function(frame, i) {
+		frame[element] = keyFrames.indexOf(i) !== -1 ? a : b;
+	});
 };
 
 frames.addElement('showPlusMinus',[0,1,4],'off');
