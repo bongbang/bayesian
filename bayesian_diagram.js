@@ -54,19 +54,23 @@ var frames = [
 	"<strong>Moral of the story:</strong> Testing works well if and only if you know when to use it.")
 ];
 
-frames.addElement = function(element, keyFrames, flip) {
-	if (flip === 'off') {
-		var a = false, b = true;
-	} else {
-		var a = true, b = false;
-	}
+frames.addShowElement = function(element, keyFrames, flip) {
+	// if (flip === 'off') {
+	// 	var a = false, b = true;
+	// } else {
+	// 	var a = true, b = false;
+	// }
 
+	var a = flip !== 'off'; // true by default
 	this.forEach(function(frame, i) {
-		frame[element] = keyFrames.indexOf(i) !== -1 ? a : b;
+		frame[element] = keyFrames.indexOf(i) !== -1 ? a : !a;
 	});
 };
 
-frames.addElement('showPlusMinus',[0,1,4],'off');
+frames.addShowElement('showPlusMinus',[0,1,4],'off');
+frames.addShowElement('showV',[0,1,4],'off');
+frames.addShowElement('showU',[0,1,4],'off');
+frames.addShowElement('showR',[0,1,4],'off');
 
 var fontShiftDuration = 500,
 		rectDuration = 1000,
