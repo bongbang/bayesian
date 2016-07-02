@@ -54,24 +54,36 @@ var frames = [
 	"<strong>Moral of the story:</strong> Testing works well if and only if you know when to use it.")
 ];
 
-frames.addShowElement = function(element, keyFrames, flip) {
-	// if (flip === 'off') {
-	// 	var a = false, b = true;
-	// } else {
-	// 	var a = true, b = false;
-	// }
-
+frames.addShow = function(showElement, keyFrames, flip) {
 	var a = flip !== 'off'; // true by default
 	this.forEach(function(frame, i) {
-		frame[element] = keyFrames.indexOf(i) !== -1 ? a : !a;
+		frame[showElement] = keyFrames.indexOf(i) !== -1 ? a : !a;
 	});
 };
 
-frames.addShowElement('showPlusMinus',[0,1,4],'off');
-frames.addShowElement('showV',[0,1,4],'off');
-frames.addShowElement('showU',[0,1,4],'off');
-frames.addShowElement('showR',[0,1,4],'off');
+frames.addStrong = function(showElement, keyFrames, flip) {
+	if (flip === 'off') {
+		this.forEach(function(frame, i) {
+			if (frame[showElement] && keyFrames.indexOf(i) === -1) {
+				frame[showElement] = 'strong';
+			}
+		});
+	} else {
+		keyFrames.forEach(function (frameNumber) {
+			this[frameNumber][showElement] = 'strong';
+		}, this);
+	}
+};
 
+frames.addShow('showR',[0,4],'off');
+frames.addStrong('showR',[2,3],'off');
+frames.addShow('showV',[0,1,4]);
+frames.addStrong('showV',[2],'off');
+frames.addShow('showU',[0,1,2,4],'off');
+frames.addStrong('showU',[3]);
+frames.addShow('showPlusMinus',[0,1,4],'off');
+
+// Styling
 var fontShiftDuration = 500,
 		rectDuration = 1000,
 		textDuration = 500,
