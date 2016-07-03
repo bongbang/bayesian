@@ -76,11 +76,13 @@ frames.addStrong = function(showElement, keyFrames, flip) {
 };
 
 frames.addShow('showR',[0,4],'off');
-frames.addStrong('showR',[2,3],'off');
-frames.addShow('showV',[0,1,4]);
-frames.addStrong('showV',[2],'off');
+frames.addShow('showV',[0,1,4], 'off');
 frames.addShow('showU',[0,1,2,4],'off');
+
+frames.addStrong('showR',[2,3],'off');
+frames.addStrong('showV',[2]);
 frames.addStrong('showU',[3]);
+
 frames.addShow('showPlusMinus',[0,1,4],'off');
 
 // Styling
@@ -231,18 +233,6 @@ var labels = svg.selectAll('text.label')
 	vLabel = d3.select('text#V-label'),
 	uLabel = d3.select('text#U-label');
 
-	// rLabel = svg.append('text')
-	// 	.text(frames[0].R)
-	// 	.attr('opacity', 0),
-
-  // vLabel = svg.append('text')
-	// 	.text(frames[0].V)
-	// 	.attr('opacity', 0),
-
-  // uLabel = svg.append('text')
-	// 	.text(frames[0].U)
-	// 	.attr('opacity', 0);
-
 var plusMinus = svg.append('g')
 	.attr('transform', 'translate(-10,' + width + ')')
 	.selectAll('text')
@@ -359,66 +349,26 @@ function plot(i, advance, delay) { // Plotting workhorse
 		;
 	return delay + rectDuration;
 }
-// Where labels need to appear/disappear before or after plot transition
-rLabel.on = false;
-vLabel.on = false;
-uLabel.on = false;
-rLabel.strong = false;
-vLabel.strong = false;
-uLabel.strong = false;
 
 function labelsPrep(i, advance, delay) {
-	var lastFrame = frames.length-1;
+	var lastFrame = frames.length-1, // no need?
+			iOld = i-advance,
+			toggled = false;
 
-	function labelSwitch(label,onToggle,strongFrames) { // should be taken outside; No need for calling every change of frame
-		var toggled, onToggled, strongToggled;
-
-		function onSwitch(toggleFrames) {
-			if (advance === 1) {
-				toggleFrames.push(0);
-			} else {
-				toggleFrames = toggleFrames.map(function(x) {return x-1;});
-				toggleFrames.push(lastFrame);
-			}
-			return toggleFrames.indexOf(i) !== -1;
+	labels.each(function(d) {
+		var showD = 'show' + d;
+		if (frames[i][showD] !== frames[iOld][showD]) {
+			toggled = true;
+			d3.select(this).transition()
+				.duration(fontShiftDuration)
+				.delay(delay)
+				.attr('opacity', frames[i][showD] ? 1 : 0)
+				.attr('font-size', frames[i][showD] === 'strong' ? '1.5em' : '1em')
+				.attr('font-weight', frames[i][showD] === 'strong' ? 700 : 400);
 		}
+	});
 
-		function strongSwitch(strongFrames) {
-			var oldStrong = label.strong;
-			if (strongFrames.indexOf(i) !== -1) {
-				label.strong = true;
-			} else {
-				label.strong = false;
-			}
-			return oldStrong !== label.strong;
-		}
-
-		if (onSwitch(onToggle)) {
-			label.on = !label.on;
-			onToggled = true;
-		}
-
-		strongToggled = strongSwitch(strongFrames);
-
-		toggled = onToggled || strongToggled;
-
-		if (toggled) {
-			label.transition().delay(delay)
-			.duration(fontShiftDuration)
-			.attr('font-weight', label.strong ? 700 : 400)
-			.attr('font-size', label.strong ? '1.4em' : '1em')
-			.attr('opacity', label.on ? 1 : 0);
-		}
-
-		return toggled;
-	}
-
-	var rToggled = labelSwitch(rLabel,[1,4,5],[1,5,6,7,8]);
-	var vToggled = labelSwitch(vLabel,[2,4,5],[2]);
-	var uToggled = labelSwitch(uLabel,[3,4,5],[3]);
-
-	return rToggled || vToggled || uToggled ?
-		fontShiftDuration + delay : 0;
+	return toggled ? fontShiftDuration + delay : 0;
 }
 
 function textEnter(delay) {
