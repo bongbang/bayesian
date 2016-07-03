@@ -350,10 +350,8 @@ function plot(i, advance, delay) { // Plotting workhorse
 	return delay + rectDuration;
 }
 
-function labelsPrep(i, advance, delay) {
-	var lastFrame = frames.length-1, // no need?
-			iOld = i-advance,
-			toggled = false;
+function labelsPrep(i, iOld, delay) {
+	var toggled = false;
 
 	labels.each(function(d) {
 		var showD = 'show' + d;
@@ -418,11 +416,11 @@ buttons.on('click', function(d) {
 		var labelTotal, rectTotal, innerTotal;
 		// label must transition first if advancing, second otherwise.
 			if ((d === 1 && i !== 0) || (d === -1 && i === frames.length-1)) {
-				labelTotal = labelsPrep(i,d,interDelay);
+				labelTotal = labelsPrep(i,iOld,interDelay);
 				innerTotal = plot(i,d, labelTotal);
 			} else {
 				rectTotal = plot(i,d, interDelay);
-				innerTotal = labelsPrep(i,d, rectTotal);
+				innerTotal = labelsPrep(i,iOld, rectTotal);
 			}
 			textEnter(innerTotal + textDuration);
 		});
