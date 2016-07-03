@@ -13,7 +13,7 @@ function PPV(V,U,R) { // positive predictive value
 	return V*R*100/(V*R + (100-U)*(100-R));
 }
 
-function makeFrame(V,U,R,text) { // frame factory 
+function makeFrame(V,U,R,text) { // frame factory
 	var frame = {
 		V: V,
 		U: U,
@@ -215,19 +215,33 @@ var truPos = svg.append('rect'),
 	falPos = svg.append('rect'),
 	truNeg = svg.append('rect')
 		.attr('class', 'tru_neg')
-		.attr('fill', '#CCC'),
+		.attr('fill', '#CCC');
 
-	rLabel = svg.append('text')
-		.text(frames[0].R)
-		.attr('opacity', 0),
+var labels = svg.selectAll('text.label')
+		.data(['R','V','U'])
+		.enter()
 
-  vLabel = svg.append('text')
-		.text(frames[0].V)
-		.attr('opacity', 0),
+		.append('text')
+		.attr('id', function(d) {return d + '-label';})
+		.attr('class','label')
+		.text(function(d) {return frames[0][d];})
+		.attr('opacity',0),
 
-  uLabel = svg.append('text')
-		.text(frames[0].U)
-		.attr('opacity', 0);
+	rLabel = d3.select('text#R-label'),
+	vLabel = d3.select('text#V-label'),
+	uLabel = d3.select('text#U-label');
+
+	// rLabel = svg.append('text')
+	// 	.text(frames[0].R)
+	// 	.attr('opacity', 0),
+
+  // vLabel = svg.append('text')
+	// 	.text(frames[0].V)
+	// 	.attr('opacity', 0),
+
+  // uLabel = svg.append('text')
+	// 	.text(frames[0].U)
+	// 	.attr('opacity', 0);
 
 var plusMinus = svg.append('g')
 	.attr('transform', 'translate(-10,' + width + ')')
@@ -252,7 +266,7 @@ container.append('p')
 	// .attr('alignment-baseline', 'text-before-edge')
 	.style('font-size', '12px')
 	.style('color', '#666')
-	.html('Sources: <a href="http://www.cdc.gov/nchs/nhanes/">NHANES</a>, 2001&ndash;12 (prevalence). ' + 
+	.html('Sources: <a href="http://www.cdc.gov/nchs/nhanes/">NHANES</a>, 2001&ndash;12 (prevalence). ' +
 			'Cook et al., <a href="http://www.ncbi.nlm.nih.gov/pubmed/15941699">Ann Intern Med.</a>, 2005 (sensitivity & specificity). ' +
 			'<em>See also</em> Miller et al., <a href="http://jama.jamanetwork.com/article.aspx?articleid=198722#REF-JOC32386-20">J Am Med Assoc.</a>, 2004.');
 
@@ -344,7 +358,7 @@ function plot(i, advance, delay) { // Plotting workhorse
 		.tween('text', runNumber(uLabel, frames[i].U, 1))
 		;
 	return delay + rectDuration;
-} 
+}
 // Where labels need to appear/disappear before or after plot transition
 rLabel.on = false;
 vLabel.on = false;
@@ -416,6 +430,8 @@ function textEnter(delay) {
 			.attr('fill', 'orange');
 	}
 }
+
+// function labelsPrep2() {
 
 
 // PLOTTING STARTS (w/ function calls)
