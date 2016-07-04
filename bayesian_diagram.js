@@ -41,7 +41,7 @@ var frames = [
 	"This surprising result is due to the low <strong>prevalence rate</strong>.<br/><br/>" +
 	"To illustrate, let’s do the same analysis on a demographic with a higher prevalence of chlamydia."),
 	makeFrame(V,U,R_young,
-	"Change the age group to <strong>18&ndash;24</strong> (still white American women, " +
+	"Change the age group to <strong>18&ndash;24</strong> (still white American women), " +
 	"and false positives drop to " +(100 - PPV(V,U,R_young)).toFixed(0)+ "% thanks to higher prevalence."),
 	makeFrame(V,U,R_black,
 	"Change the racial group to <strong>black</strong> on top of that, and false positives are down to " +(100 - PPV(V,U,R_black)).toFixed(0)+ "%.<br/><br/>" +
@@ -86,9 +86,7 @@ frames.addStrong('showU',[3]);
 frames.addShow('showPlusMinus',[0,1,4],'off');
 
 // Styling
-var fontShiftDuration = 500,
-		rectDuration = 1000,
-		textDuration = 500,
+var textDuration = 500,
 		fontStyle = "400 14px 'Helvetica Neue', Helvetica, Arial, sans-serif";
 
 var scale = d3.scale.linear()
@@ -260,15 +258,15 @@ container.append('p')
 			'<em>See also</em> Miller et al., <a href="http://jama.jamanetwork.com/article.aspx?articleid=198722#REF-JOC32386-20">J Am Med Assoc.</a>, 2004.');
 
 function plot(i, advance, delay) { // Plotting workhorse
-  var frame = frames[i],
+	var frame = frames[i],
 		sU = scale(frame.U),
 		sV = scale(frame.V),
 		sR = scale(frame.R),
 
 		noTestColor = '#CCC',
 		posColor = '#D00',
-		negColor = '#070'
-		;
+		negColor = '#070',
+		rectDuration = 1000;
 
 	var testNegOn = (i !== 4); // Shows positive only on Frame 4
 
@@ -350,7 +348,8 @@ function plot(i, advance, delay) { // Plotting workhorse
 }
 
 function labelsPrep(i, iOld, delay) {
-	var toggled = false;
+	var fontShiftDuration = 500,
+			toggled = false;
 
 	labels.each(function(d) {
 		var showD = 'show' + d;
@@ -365,7 +364,7 @@ function labelsPrep(i, iOld, delay) {
 		}
 	});
 
-	return toggled ? fontShiftDuration + delay : 0;
+	return toggled ? fontShiftDuration + delay : delay;
 }
 
 function textEnter(delay) {
@@ -385,41 +384,49 @@ function textEnter(delay) {
 var i = 0;
 plot(i,1,0);
 textbox.html(frames[i].text);
-textEnter(rectDuration);
+textEnter(0);
 
 buttons.on('click', function(d) {
 	var iOld = i,
 		lastFrame = frames.length-1;
-	i += d;
 
+	i += d;
 	if (i > lastFrame) {i = 0;}
 	else if (i < 0) {i = lastFrame;}
+
+	nextButton.attr('fill', iconColor); // turn off highlight
 	nextButton.attr('xlink:href', i === lastFrame ? '#repeat' : '#forward');
 
-	nextButton.attr('fill', iconColor);
+	var interDelay = 500,
+		innerDelay = interDelay + textDuration;
+	// "inner" means label & plot transitions, which are sandwiched btw text disapparance & reintry
+	var labelFinish, rectFinish, innerFinish;
+	// transition finish time (delay + duration).
 
+	// Textbox desappears
 	textbox.transition().duration(textDuration)
 		.style('opacity', 0)
 		.each('end', function() {
 			textbox.html(frames[i].text);
-
-		var interDelay = 500;
-		var labelTotal, rectTotal, innerTotal;
-		// label must transition first if advancing, second otherwise.
-			if ((d === 1 && i !== 0) || (d === -1 && i === lastFrame)) {
-				labelTotal = labelsPrep(i,iOld,interDelay);
-				innerTotal = plot(i,d, labelTotal);
-			} else {
-				rectTotal = plot(i,d, interDelay);
-				innerTotal = labelsPrep(i,iOld, rectTotal);
-			}
-			textEnter(innerTotal + textDuration);
 		});
 
+	// Labels must adjust first if advancing, second otherwise.
+	if ((d === 1 && i !== 0) || (d === -1 && i === lastFrame)) {
+		labelFinish = labelsPrep(i,iOld,innerDelay);
+		innerFinish = plot(i,d, labelFinish);
+	} else {
+		rectFinish = plot(i,d, innerDelay);
+		innerFinish = labelsPrep(i,iOld, rectFinish);
+	}
+
+	// Textbox reappears
+	textEnter(innerFinish + interDelay);
+
+	// +/- disappears w/ textbox OR appears w/ rentry (when applicable)
 	if (frames[i].showPlusMinus !== frames[iOld].showPlusMinus) {
 		if (frames[i].showPlusMinus) {
 			plusMinus.transition().duration(textDuration)
-				.delay(rectDuration + textDuration) // wait for rect plot to finish
+				.delay(innerFinish + interDelay) // wait for rect plot to finish
 				.attr('opacity', 1);
 		} else {
 			plusMinus.transition().duration(textDuration)
