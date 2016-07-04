@@ -89,7 +89,6 @@ frames.addShow('showPlusMinus',[0,1,4],'off');
 var fontShiftDuration = 500,
 		rectDuration = 1000,
 		textDuration = 500,
-		interDelay = 500,
 		fontStyle = "400 14px 'Helvetica Neue', Helvetica, Arial, sans-serif";
 
 var scale = d3.scale.linear()
@@ -229,7 +228,7 @@ var labels = svg.selectAll('text.label')
 		.text(function(d) {return frames[0][d];})
 		.attr('opacity',0),
 
-	rLabel = d3.select('text#R-label'),
+	rLabel = d3.select('text#R-label'), // to put inside labels
 	vLabel = d3.select('text#V-label'),
 	uLabel = d3.select('text#U-label');
 
@@ -389,23 +388,14 @@ textbox.html(frames[i].text);
 textEnter(rectDuration);
 
 buttons.on('click', function(d) {
-	var iOld = i;
+	var iOld = i,
+		lastFrame = frames.length-1;
 	i += d;
-	if (i >= frames.length) {i = 0;
-	}
-	else if (i < 0) {
-		i = frames.length-1;
-	}
 
-	if (i === frames.length-1) {
-		nextButton.attr('xlink:href', '#repeat');
-	} else {
-		nextButton.attr('xlink:href', '#forward');
-	}
+	if (i > lastFrame) {i = 0;}
+	else if (i < 0) {i = lastFrame;}
+	nextButton.attr('xlink:href', i === lastFrame ? '#repeat' : '#forward');
 
-	// function plusMinus() {
-	// 	if
-	// "Turn off" buttons and text
 	nextButton.attr('fill', iconColor);
 
 	textbox.transition().duration(textDuration)
@@ -413,9 +403,10 @@ buttons.on('click', function(d) {
 		.each('end', function() {
 			textbox.html(frames[i].text);
 
+		var interDelay = 500;
 		var labelTotal, rectTotal, innerTotal;
 		// label must transition first if advancing, second otherwise.
-			if ((d === 1 && i !== 0) || (d === -1 && i === frames.length-1)) {
+			if ((d === 1 && i !== 0) || (d === -1 && i === lastFrame)) {
 				labelTotal = labelsPrep(i,iOld,interDelay);
 				innerTotal = plot(i,d, labelTotal);
 			} else {
