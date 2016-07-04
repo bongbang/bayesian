@@ -9,10 +9,6 @@ var V =	92.5, // Sensitivity
   R_young = 1.87, // WF 18-24
   R_black = 10.49; // BF 18-24
 
-function PPV(V,U,R) { // positive predictive value
-	return V*R*100/(V*R + (100-U)*(100-R));
-}
-
 function makeFrame(V,U,R,text) { // frame factory
 	var frame = {
 		V: V,
@@ -21,6 +17,10 @@ function makeFrame(V,U,R,text) { // frame factory
 		text: text
 	};
 	return frame;
+}
+
+function PPV(V,U,R) { // positive predictive value
+	return V*R*100/(V*R + (100-U)*(100-R));
 }
 
 var frames = [
@@ -89,10 +89,7 @@ frames.addShow('showPlusMinus',[0,1,4],'off');
 var textDuration = 500,
 		fontStyle = "400 14px 'Helvetica Neue', Helvetica, Arial, sans-serif";
 
-var scale = d3.scale.linear()
-  .domain([0,100])
-  .range([0,width]);
-
+// Page elements
 var container = d3.select('body').append('div')
 	.attr('id', 'container')
 	.style('position', 'relative')
@@ -116,13 +113,11 @@ var textbox = container.append('div')
 	.style('z-index', 1);
 
 container.append('svg')
-  // .style('border', '1px solid #CCC')
   .attr("width", width + margin.left + margin.right)
   .attr("height", height + margin.top + margin.bottom)
 
 	.append('style')
 	.text(
-		// 'text {font: ' + fontStyle + ';}' +
 		'#buttonsPlace g.button:hover use {fill: #000;}' +
 		'g.button {cursor: pointer}' +
 		'g.button:active rect {fill: #EEE;}' +
@@ -132,7 +127,7 @@ container.append('svg')
 var svg = container.select('svg').append("g")
   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-
+// SVG icons and clippaths
 var defs = svg.append('defs');
 defs.append('clipPath')
 	.attr('id', 'positive_clip')
@@ -164,6 +159,7 @@ repeat.append('path')
 repeat.append('path')
 	.attr('d',"M462.456,195.511c-1.8-7.2-9.1-11.7-16.3-9.9c-7.2,1.8-11.7,9.1-9.9,16.3c16.9,69.6-5.6,142.7-58.7,190.7 c-37.3,33.7-84.1,50.3-130.7,50.3c-44.5,0-88.9-15.1-124.7-44.9l58.8-5.3c7.4-0.7,12.9-7.2,12.2-14.7s-7.2-12.9-14.7-12.2l-88.9,8 c-7.4,0.7-12.9,7.2-12.2,14.7l8,88.9c0.6,7,6.5,12.3,13.4,12.3c0.4,0,0.8,0,1.2-0.1c7.4-0.7,12.9-7.2,12.2-14.7l-4.8-54.1 c36.3,29.4,80.8,46.5,128.3,48.9c3.8,0.2,7.6,0.3,11.3,0.3c55.1,0,107.5-20.2,148.7-57.4 C456.056,357.911,481.656,274.811,462.456,195.511z");
 
+	// Buttons
 var buttonsPlace = svg.append('g')
 	.attr('transform', 'translate(' + width + ', ' + -margin.top + ')')
 	.attr('id', 'buttonsPlace');
@@ -196,9 +192,10 @@ buttons.append('use')
 	.attr('x', (buttonWidth-iconSize)/2)
 	.attr('y', (buttonWidth-iconSize)/2);
 
-var nextButton = 	buttonsPlace.selectAll('g:nth-child(2)').select('use');
+var nextButton = buttonsPlace.selectAll('g:nth-child(2)').select('use');
 
 // PLOTTING
+// Quadrant
 var posImage = svg.append('image')
 			.attr('clip-path', 'url(#positive_clip)'),
 		negImage = svg.append('image')
@@ -208,14 +205,18 @@ svg.selectAll('image')
 	.attr('width', width)
 	.attr('height', width);
 
-var truPos = svg.append('rect'),
+var truPos = svg.append('rect')
+		.attr('fill', '#D00'),
 	falNeg = svg.append('rect')
-		.attr('class', 'fal_neg'),
-	falPos = svg.append('rect'),
+		.attr('class', 'fal_neg')
+    .attr('fill', '#F99'), // previously #FAA
+	falPos = svg.append('rect')
+		.attr('fill','#070'),
 	truNeg = svg.append('rect')
 		.attr('class', 'tru_neg')
 		.attr('fill', '#CCC');
 
+// Labels
 var labels = svg.selectAll('text.label')
 		.data(['R','V','U'])
 		.enter()
@@ -224,11 +225,13 @@ var labels = svg.selectAll('text.label')
 		.attr('id', function(d) {return d + '-label';})
 		.attr('class','label')
 		.text(function(d) {return frames[0][d];})
-		.attr('opacity',0),
+		.attr('opacity',0);
 
-	rLabel = d3.select('text#R-label'), // to put inside labels
-	vLabel = d3.select('text#V-label'),
-	uLabel = d3.select('text#U-label');
+var rLabel = svg.select('#R-label').attr('text-anchor', 'middle'),
+	vLabel = svg.select('#V-label').attr('text-anchor', 'end')
+		.attr('alignment-baseline', 'middle'),
+	uLabel = svg.select('#U-label').attr('text-anchor', 'start')
+		.attr('alignment-baseline', 'middle');
 
 var plusMinus = svg.append('g')
 	.attr('transform', 'translate(-10,' + width + ')')
@@ -246,7 +249,6 @@ var plusMinus = svg.append('g')
 	.html(function(d) {return d;});
 
 // Sources
-
 container.append('p')
 	// .attr('x', -20)
 	// .attr('y', width*2 + 10)
@@ -257,15 +259,15 @@ container.append('p')
 			'Cook et al., <a href="http://www.ncbi.nlm.nih.gov/pubmed/15941699">Ann Intern Med.</a>, 2005 (sensitivity & specificity). ' +
 			'<em>See also</em> Miller et al., <a href="http://jama.jamanetwork.com/article.aspx?articleid=198722#REF-JOC32386-20">J Am Med Assoc.</a>, 2004.');
 
+var scale = d3.scale.linear()
+  .domain([0,100])
+  .range([0,width]);
+
 function plot(i, advance, delay) { // Plotting workhorse
 	var frame = frames[i],
 		sU = scale(frame.U),
 		sV = scale(frame.V),
 		sR = scale(frame.R),
-
-		noTestColor = '#CCC',
-		posColor = '#D00',
-		negColor = '#070',
 		rectDuration = 1000;
 
 	var testNegOn = (i !== 4); // Shows positive only on Frame 4
@@ -288,33 +290,30 @@ function plot(i, advance, delay) { // Plotting workhorse
   truPos.transition().delay(delay).duration(rectDuration)
     .attr('y', width - sV)
     .attr('height', sV)
-    .attr('width', sR)
-    .attr('fill', posColor);
+    .attr('width', sR);
 
   svg.selectAll('.fal_neg').transition().delay(delay).duration(rectDuration)
     .attr('y', width)
     .attr('height', width - sV)
     .attr('width', sR)
-    .attr('fill', '#F99') // previously #FAA
 		.attr('opacity', testNegOn ? 0.7 : 0);
 
 	// Condition Negative (Right) side of plot
 	negImage.transition().delay(delay).duration(rectDuration)
 		.attr('y', sU)
 		.call(imageSwitch);
-  falPos.transition().delay(delay).duration(rectDuration)
+	falPos.transition().delay(delay).duration(rectDuration)
     .attr('x', sR)
     .attr('y', sU)
     .attr('height', width - sU)
-    .attr('width', width - sR)
-    .attr('fill', negColor);
+    .attr('width', width - sR);
 
 	svg.selectAll('.tru_neg').transition().delay(delay).duration(rectDuration)
 		.attr('x', sR)
 		.attr('y', width)
 		.attr('height', sU)
 		.attr('width', width - sR)
-		.attr('fill',  i === 0 ? noTestColor:'#BFB')
+		.attr('fill',  i === 0 ? '#CCC' :'#BFB')
 		.attr('opacity', testNegOn ? 0.6 : 0);
 
 	// Labels
@@ -328,26 +327,21 @@ function plot(i, advance, delay) { // Plotting workhorse
   rLabel.transition().delay(delay).duration(rectDuration)
     .attr('x', sR/2)
     .attr('y', width - sV - 5)
-    .attr('text-anchor', 'middle')
 		.tween('text', runNumber(rLabel,frames[i].R, [7,8].indexOf(i) !== -1 ? 1 : 2));
 
 	vLabel.transition().delay(delay).duration(rectDuration)
 		.attr('y', width - sV/2) .attr('x', -10)
-		.attr('text-anchor', 'end')
-		.attr('alignment-baseline', 'middle')
 		.tween('text', runNumber(vLabel, frames[i].V, 1));
 
 	uLabel.transition().delay(delay).duration(rectDuration)
 		.attr('x', width + 10)
 		.attr('y', width + sU/2)
-		.attr('text-anchor', 'start')
-		.attr('alignment-baseline', 'middle')
 		.tween('text', runNumber(uLabel, frames[i].U, 1))
 		;
 	return delay + rectDuration;
 }
 
-function labelsPrep(i, iOld, delay) {
+function labelsAdjust(i, iOld, delay) {
 	var fontShiftDuration = 500,
 			toggled = false;
 
@@ -367,41 +361,30 @@ function labelsPrep(i, iOld, delay) {
 	return toggled ? fontShiftDuration + delay : delay;
 }
 
-function textEnter(delay) {
-	textbox.transition().duration(textDuration).delay(delay)
-		.style('opacity', 1);
-	if (i !== frames.length-1) {
-		nextButton.transition().duration(500)
-			.delay(delay + textDuration)
-			.attr('fill', 'orange');
-	}
-}
-
-// function labelsPrep2() {
-
-
-// PLOTTING STARTS (w/ function calls)
+// PLOT RENDERING
 var i = 0;
 plot(i,1,0);
-textbox.html(frames[i].text);
-textEnter(0);
+textbox.html(frames[i].text)
+	.style('opacity', 1);
 
+// OnClick action
 buttons.on('click', function(d) {
 	var iOld = i,
 		lastFrame = frames.length-1;
 
 	i += d;
-	if (i > lastFrame) {i = 0;}
-	else if (i < 0) {i = lastFrame;}
-
-	nextButton.attr('fill', iconColor); // turn off highlight
-	nextButton.attr('xlink:href', i === lastFrame ? '#repeat' : '#forward');
+	if (i > lastFrame) {i = 0;
+	} else if (i < 0) {i = lastFrame;
+	}
 
 	var interDelay = 500,
 		innerDelay = interDelay + textDuration;
 	// "inner" means label & plot transitions, which are sandwiched btw text disapparance & reintry
-	var labelFinish, rectFinish, innerFinish;
-	// transition finish time (delay + duration).
+
+	// ===== Transition sequence hereon after =====
+	// Button dims
+	nextButton.attr('fill', iconColor); // turn off highlight
+	nextButton.attr('xlink:href', i === lastFrame ? '#repeat' : '#forward');
 
 	// Textbox desappears
 	textbox.transition().duration(textDuration)
@@ -410,17 +393,27 @@ buttons.on('click', function(d) {
 			textbox.html(frames[i].text);
 		});
 
-	// Labels must adjust first if advancing, second otherwise.
+	// Labels adjust first if advancing, second otherwise.
+	var innerFinish;
 	if ((d === 1 && i !== 0) || (d === -1 && i === lastFrame)) {
-		labelFinish = labelsPrep(i,iOld,innerDelay);
+		var labelFinish = labelsAdjust(i,iOld,innerDelay);
 		innerFinish = plot(i,d, labelFinish);
 	} else {
-		rectFinish = plot(i,d, innerDelay);
-		innerFinish = labelsPrep(i,iOld, rectFinish);
+		var rectFinish = plot(i,d, innerDelay);
+		innerFinish = labelsAdjust(i,iOld, rectFinish);
 	}
 
 	// Textbox reappears
-	textEnter(innerFinish + interDelay);
+	textbox.transition().duration(textDuration)
+		.delay(innerFinish + interDelay)
+		.style('opacity', 1);
+
+	// Button lights up
+	if (i !== frames.length-1) {
+		nextButton.transition().duration(500)
+			.delay(innerFinish + innerDelay + textDuration)
+			.attr('fill', 'orange');
+	}
 
 	// +/- disappears w/ textbox OR appears w/ rentry (when applicable)
 	if (frames[i].showPlusMinus !== frames[iOld].showPlusMinus) {
