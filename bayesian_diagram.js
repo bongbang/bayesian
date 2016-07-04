@@ -35,7 +35,7 @@ var frames = [
 	"And given the test’s <strong>specificity</strong>, 100 &minus; " +U+
 		" = " +(100-U).toFixed(1)+ "% of the <em>healthy</em> group can also be expected to test positive, as shown in deep green."),
 	makeFrame(V,U,R,
-	"Among the positive testers (looking like half a plus sign, <strong>true positives</strong> (red) make up only " +PPV(V,U,R).toFixed(0)+
+	"Among the positive testers, <strong>true positives</strong> (red) make up only " +PPV(V,U,R).toFixed(0)+
 	"%, which means that <strong>false positives</strong> (green) are as high as " +(100 - PPV(V,U,R)).toFixed(0)+ "%!" ),
 	makeFrame(V,U,R,
 	"This surprising result is due to the low <strong>prevalence rate</strong>.<br/><br/>" +
@@ -279,7 +279,8 @@ function plot(i, advance, delay) { // Plotting workhorse
 			if (i === 6) { return 'images/girls_bw.jpg';
 			} else if (i === 7) { return 'images/tlc_bw.jpg';
 			} else if (i === 8) { return 'images/kardashian_bw.jpg';
-			} else { return 'images/friends_bw.jpg';}
+			} else { return 'images/friends_bw.jpg';
+			}
 		});
 	}
 
@@ -317,7 +318,8 @@ function plot(i, advance, delay) { // Plotting workhorse
 		.attr('opacity', testNegOn ? 0.6 : 0);
 
 	// Labels
-	function runNumber(that, end, decimal) {
+	function runNumber(that, end) {
+		var decimal = end >= 10 ? 1 : 2;
 		return function() {
 			var n = d3.interpolateNumber(that.text().replace(/%/g, ""), end);
 			return function(t) {d3.select(this).text(n(t).toFixed(decimal)+'%');};
@@ -327,17 +329,17 @@ function plot(i, advance, delay) { // Plotting workhorse
   rLabel.transition().delay(delay).duration(rectDuration)
     .attr('x', sR/2)
     .attr('y', width - sV - 5)
-		.tween('text', runNumber(rLabel,frames[i].R, [7,8].indexOf(i) !== -1 ? 1 : 2));
+		.tween('text', runNumber(rLabel,frames[i].R));
 
 	vLabel.transition().delay(delay).duration(rectDuration)
 		.attr('y', width - sV/2) .attr('x', -10)
-		.tween('text', runNumber(vLabel, frames[i].V, 1));
+		.tween('text', runNumber(vLabel, frames[i].V));
 
 	uLabel.transition().delay(delay).duration(rectDuration)
 		.attr('x', width + 10)
 		.attr('y', width + sU/2)
-		.tween('text', runNumber(uLabel, frames[i].U, 1))
-		;
+		.tween('text', runNumber(uLabel, frames[i].U)) ;
+
 	return delay + rectDuration;
 }
 
