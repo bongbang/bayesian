@@ -367,8 +367,10 @@ function labelsAdjust(i, iOld, delay) {
 // PLOT RENDERING
 var i = 0;
 plot(i,1,0);
-textbox.html(frames[i].text)
+textbox
+	.html(frames[i].text)
 	.style('opacity', 1);
+nextButton.attr('fill', 'orange');
 
 // OnClick action
 buttons.on('click', function(d) {
@@ -418,15 +420,15 @@ buttons.on('click', function(d) {
 	// Button lights up
 	if (i !== lastFrame) {
 		nextButton.transition().duration(500)
-			.delay(innerFinish + innerDelay + textDuration)
+			.delay(innerFinish + interDelay)
 			.attr('fill', 'orange');
 	}
 
-	// +/- disappears w/ textbox OR appears w/ rentry (when applicable)
+	// +/- appears w/ rect OR disappears w/ textbox (when applicable)
 	if (frames[i].showPlusMinus !== frames[iOld].showPlusMinus) {
 		if (frames[i].showPlusMinus) {
 			plusMinus.transition().duration(textDuration)
-				.delay(innerFinish + interDelay) // wait for rect plot to finish
+				.delay(innerFinish - 300) // wait for other labels to pass
 				.attr('opacity', 1);
 		} else {
 			plusMinus.transition().duration(textDuration)
