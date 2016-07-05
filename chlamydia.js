@@ -50,7 +50,7 @@ var frames = [
 	makeFrame(V,U,50,
 	"If, say, half of this suspect group have chlamydia, then a positive result is highly dispositive. " +
 	"Expected false positives are only " +(100 - PPV(V,U,50)).toFixed(0)+
-	"%, and the positive prediction value (PPV) is " +PPV(V,U,50).toFixed(0)+ "%!<br/><br/>" +
+	"%, i.e. the positive prediction value (PPV) is " +PPV(V,U,50).toFixed(0)+ "%!<br/><br/>" +
 	"<strong>Moral of the story:</strong> Testing works well if and only if you know when to use it.")
 ];
 
