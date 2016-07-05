@@ -54,6 +54,7 @@ var frames = [
 	"<strong>Moral of the story:</strong> Testing works well if and only if you know when to use it.")
 ];
 
+var lastFrame = frames.length-1;
 frames.addShow = function(showElement, keyFrames, flip) {
 	var a = flip !== 'off'; // true by default
 	this.forEach(function(frame, i) {
@@ -263,7 +264,7 @@ var scale = d3.scale.linear()
   .domain([0,100])
   .range([0,width]);
 
-function plot(i, advance, delay) { // Plotting workhorse
+function plot(i, iOld, delay) { // Plotting workhorse
 	var frame = frames[i],
 		sU = scale(frame.U),
 		sV = scale(frame.V),
@@ -318,10 +319,10 @@ function plot(i, advance, delay) { // Plotting workhorse
 		.attr('opacity', testNegOn ? 0.6 : 0);
 
 	// Labels
-	function runNumber(that, end) {
-		var decimal = end >= 10 ? 1 : 2;
+	function runNumber(selection, end, decimal) {
+		decimal = decimal || 1;
 		return function() {
-			var n = d3.interpolateNumber(that.text().replace(/%/g, ""), end);
+			var n = d3.interpolateNumber(selection.text().replace(/%/g, ""), end);
 			return function(t) {d3.select(this).text(n(t).toFixed(decimal)+'%');};
 		};
 	}
@@ -329,7 +330,7 @@ function plot(i, advance, delay) { // Plotting workhorse
   rLabel.transition().delay(delay).duration(rectDuration)
     .attr('x', sR/2)
     .attr('y', width - sV - 5)
-		.tween('text', runNumber(rLabel,frames[i].R));
+		.tween('text', runNumber(rLabel,frames[i].R, (frames[i].R < 10 && iOld !== lastFrame) ? 2 : 1));
 
 	vLabel.transition().delay(delay).duration(rectDuration)
 		.attr('y', width - sV/2) .attr('x', -10)
@@ -371,8 +372,7 @@ textbox.html(frames[i].text)
 
 // OnClick action
 buttons.on('click', function(d) {
-	var iOld = i,
-		lastFrame = frames.length-1;
+	var iOld = i;
 
 	i += d;
 	if (i > lastFrame) {i = 0;
@@ -399,10 +399,15 @@ buttons.on('click', function(d) {
 	var innerFinish;
 	if ((d === 1 && i !== 0) || (d === -1 && i === lastFrame)) {
 		var labelFinish = labelsAdjust(i,iOld,innerDelay);
-		innerFinish = plot(i,d, labelFinish);
+		innerFinish = plot(i,iOld, labelFinish);
 	} else {
-		var rectFinish = plot(i,d, innerDelay);
+		var rectFinish = plot(i,iOld, innerDelay);
 		innerFinish = labelsAdjust(i,iOld, rectFinish);
+	}
+
+	// ** Special case: reset rLabel when 0
+	if (i === 0 && iOld === lastFrame) {
+		window.setTimeout(function() {rLabel.text(frames[0].R.toFixed(2));}, innerFinish);
 	}
 
 	// Textbox reappears
@@ -411,7 +416,7 @@ buttons.on('click', function(d) {
 		.style('opacity', 1);
 
 	// Button lights up
-	if (i !== frames.length-1) {
+	if (i !== lastFrame) {
 		nextButton.transition().duration(500)
 			.delay(innerFinish + innerDelay + textDuration)
 			.attr('fill', 'orange');
