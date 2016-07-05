@@ -385,12 +385,12 @@ buttons.on('click', function(d) {
 		innerDelay = interDelay + textDuration;
 	// "inner" means label & plot transitions, which are sandwiched btw text disapparance & reintry
 
-	// ===== Transition sequence hereon after =====
+	// ===== Transition sequence hereonafter =====
 	// Button dims
 	nextButton.attr('fill', iconColor); // turn off highlight
 	nextButton.attr('xlink:href', i === lastFrame ? '#repeat' : '#forward');
 
-	// Textbox desappears
+	// Textbox disappears
 	textbox.transition().duration(textDuration)
 		.style('opacity', 0)
 		.each('end', function() {
@@ -407,7 +407,7 @@ buttons.on('click', function(d) {
 		innerFinish = labelsAdjust(i,iOld, rectFinish);
 	}
 
-	// ** Special case: reset rLabel when 0
+	// ** Special case: reset rLabel when repeating
 	if (i === 0 && iOld === lastFrame) {
 		window.setTimeout(function() {rLabel.text(frames[0].R.toFixed(2));}, innerFinish);
 	}
@@ -419,7 +419,7 @@ buttons.on('click', function(d) {
 
 	// Button lights up
 	if (i !== lastFrame) {
-		nextButton.transition().duration(500)
+		nextButton.transition().duration(textDuration)
 			.delay(innerFinish + interDelay)
 			.attr('fill', 'orange');
 	}
@@ -428,10 +428,11 @@ buttons.on('click', function(d) {
 	if (frames[i].showPlusMinus !== frames[iOld].showPlusMinus) {
 		if (frames[i].showPlusMinus) {
 			plusMinus.transition().duration(textDuration)
-				.delay(innerFinish - 300) // wait for other labels to pass
+				.delay(innerFinish - 500) // wait for other labels to pass
 				.attr('opacity', 1);
 		} else {
 			plusMinus.transition().duration(textDuration)
+				.delay(500)
 				.attr('opacity', 0);
 		}
 	}
