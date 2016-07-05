@@ -228,10 +228,15 @@ var labels = svg.selectAll('text.label')
 		.text(function(d) {return frames[0][d];})
 		.attr('opacity',0);
 
-var rLabel = svg.select('#R-label').attr('text-anchor', 'middle'),
-	vLabel = svg.select('#V-label').attr('text-anchor', 'end')
+var rLabel = svg.select('#R-label')
+		.attr('text-anchor', 'middle'),
+	vLabel = svg.select('#V-label')
+		.attr('x', -10)
+		.attr('text-anchor', 'end')
 		.attr('alignment-baseline', 'middle'),
-	uLabel = svg.select('#U-label').attr('text-anchor', 'start')
+	uLabel = svg.select('#U-label')
+		.attr('x', width + 10)
+		.attr('text-anchor', 'start')
 		.attr('alignment-baseline', 'middle');
 
 var plusMinus = svg.append('g')
@@ -264,12 +269,12 @@ var scale = d3.scale.linear()
   .domain([0,100])
   .range([0,width]);
 
-function plot(i, iOld, delay) { // Plotting workhorse
+function plot(i, iOld, delay, rectDuration) { // Plotting workhorse
 	var frame = frames[i],
 		sU = scale(frame.U),
 		sV = scale(frame.V),
 		sR = scale(frame.R),
-		rectDuration = 1000;
+		rectDuration = rectDuration || 1000;
 
 	var testNegOn = (i !== 4); // Shows positive only on Frame 4
 
@@ -336,11 +341,10 @@ function plot(i, iOld, delay) { // Plotting workhorse
 			.tween('text', runNumber(rLabel,frames[i].R, (frames[i].R < 10 && iOld !== lastFrame) ? 2 : 1));
 
 		vLabel.transition().delay(delay).duration(rectDuration)
-			.attr('y', width - sV/2) .attr('x', -10)
+			.attr('y', width - sV/2)
 			.tween('text', runNumber(vLabel, frames[i].V));
 
 		uLabel.transition().delay(delay).duration(rectDuration)
-			.attr('x', width + 10)
 			.attr('y', width + sU/2)
 			.tween('text', runNumber(uLabel, frames[i].U)) ;
 	}
@@ -407,7 +411,7 @@ buttons.on('click', function(d) {
 			frames[i].V === frames[iOld].V &&
 			frames[i].U === frames[iOld].U) {
 		labelsAdjust(i,iOld,innerDelay);
-		innerFinish = plot(i,iOld, innerDelay);
+		innerFinish = plot(i,iOld, innerDelay, textDuration);
 		rectFinish = innerDelay; // for plusMinus below
 	} else if (forward) {
 		var labelFinish = labelsAdjust(i,iOld,innerDelay);
