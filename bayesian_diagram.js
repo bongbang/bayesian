@@ -319,28 +319,31 @@ function plot(i, iOld, delay) { // Plotting workhorse
 		.attr('opacity', testNegOn ? 0.6 : 0);
 
 	// Labels
-	function runNumber(selection, end, decimal) {
-		decimal = decimal || 1;
-		return function() {
-			var n = d3.interpolateNumber(selection.text().replace(/%/g, ""), end);
-			return function(t) {d3.select(this).text(n(t).toFixed(decimal)+'%');};
-		};
+	if (frames[i].R !== frames[iOld].R ||
+			frames[i].V !== frames[iOld].V ||
+			frames[i].U !== frames[iOld].U) {
+		function runNumber(selection, end, decimal) {
+			decimal = decimal || 1;
+			return function() {
+				var n = d3.interpolateNumber(selection.text().replace(/%/g, ""), end);
+				return function(t) {d3.select(this).text(n(t).toFixed(decimal)+'%');};
+			};
+		}
+
+		rLabel.transition().delay(delay).duration(rectDuration)
+			.attr('x', sR/2)
+			.attr('y', width - sV - 5)
+			.tween('text', runNumber(rLabel,frames[i].R, (frames[i].R < 10 && iOld !== lastFrame) ? 2 : 1));
+
+		vLabel.transition().delay(delay).duration(rectDuration)
+			.attr('y', width - sV/2) .attr('x', -10)
+			.tween('text', runNumber(vLabel, frames[i].V));
+
+		uLabel.transition().delay(delay).duration(rectDuration)
+			.attr('x', width + 10)
+			.attr('y', width + sU/2)
+			.tween('text', runNumber(uLabel, frames[i].U)) ;
 	}
-
-  rLabel.transition().delay(delay).duration(rectDuration)
-    .attr('x', sR/2)
-    .attr('y', width - sV - 5)
-		.tween('text', runNumber(rLabel,frames[i].R, (frames[i].R < 10 && iOld !== lastFrame) ? 2 : 1));
-
-	vLabel.transition().delay(delay).duration(rectDuration)
-		.attr('y', width - sV/2) .attr('x', -10)
-		.tween('text', runNumber(vLabel, frames[i].V));
-
-	uLabel.transition().delay(delay).duration(rectDuration)
-		.attr('x', width + 10)
-		.attr('y', width + sU/2)
-		.tween('text', runNumber(uLabel, frames[i].U)) ;
-
 	return delay + rectDuration;
 }
 
@@ -398,12 +401,13 @@ buttons.on('click', function(d) {
 		});
 
 	// Labels adjust first if advancing, second otherwise.
-	var innerFinish;
-	if ((d === 1 && i !== 0) || (d === -1 && i === lastFrame)) {
+	var innerFinish, rectFinish,
+		forward = (d === 1 && i !== 0) || (d === -1 && i === lastFrame);
+	if (forward) {
 		var labelFinish = labelsAdjust(i,iOld,innerDelay);
 		innerFinish = plot(i,iOld, labelFinish);
 	} else {
-		var rectFinish = plot(i,iOld, innerDelay);
+		rectFinish = plot(i,iOld, innerDelay);
 		innerFinish = labelsAdjust(i,iOld, rectFinish);
 	}
 
@@ -426,14 +430,14 @@ buttons.on('click', function(d) {
 
 	// +/- appears w/ rect OR disappears w/ textbox (when applicable)
 	if (frames[i].showPlusMinus !== frames[iOld].showPlusMinus) {
-		if (frames[i].showPlusMinus) {
-			plusMinus.transition().duration(textDuration)
-				.delay(innerFinish - 500) // wait for other labels to pass
-				.attr('opacity', 1);
-		} else {
-			plusMinus.transition().duration(textDuration)
-				.delay(500)
-				.attr('opacity', 0);
-		}
+		plusMinus.transition().duration(textDuration)
+			.delay(function() {
+				if (forward) { // avoid clash
+					return [2,lastFrame].indexOf(i) !== -1 ? innerDelay + 700 : innerDelay;
+				} else {
+					return [0,1].indexOf(i) !== -1 ? rectFinish - 700 : rectFinish;
+				}
+			})
+			.attr('opacity', (frames[i].showPlusMinus) ? 1 : 0 );
 	}
 });
