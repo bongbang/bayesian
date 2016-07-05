@@ -255,13 +255,24 @@ var plusMinus = svg.append('g')
 	.html(function(d) {return d;});
 
 // Sources
+
+// svg.append('text')
+// 	.attr('x', width + 5)
+// 	.attr('y', width*2)
+// 	.attr('transform', 'rotate(-90 '  +(width+5)+ ' ' +width*2+ ')')
+// 	.attr('text-anchor', 'start')
+// 	.attr('alignment-baseline', 'text-before-edge')
+// 	.attr('font-size', '12px')
+// 	.attr('fill', '#666')
+// 	.html('&copy; Tom Vamvanij');
+
 container.append('p')
-	// .attr('x', -20)
-	// .attr('y', width*2 + 10)
-	// .attr('alignment-baseline', 'text-before-edge')
+	.style('margin', 0)
 	.style('font-size', '12px')
 	.style('color', '#666')
-	.html('Sources: <a href="http://www.cdc.gov/nchs/nhanes/">NHANES</a>, 2001&ndash;12 (prevalence). ' +
+	.html(
+			'By Tom Vamvanij <br>' +
+			'Sources: <a href="http://www.cdc.gov/nchs/nhanes/">NHANES</a>, 2001&ndash;2012 (prevalence). ' +
 			'Cook et al., <a href="http://www.ncbi.nlm.nih.gov/pubmed/15941699">Ann Intern Med.</a>, 2005 (sensitivity & specificity). ' +
 			'<em>See also</em> Miller et al., <a href="http://jama.jamanetwork.com/article.aspx?articleid=198722#REF-JOC32386-20">J Am Med Assoc.</a>, 2004.');
 
