@@ -410,7 +410,7 @@ buttons.on('click', function(d) {
 	if (frames[i].R === frames[iOld].R &&
 			frames[i].V === frames[iOld].V &&
 			frames[i].U === frames[iOld].U) {
-		labelsAdjust(i,iOld,innerDelay);
+		labelsAdjust(i, iOld, innerDelay);
 		innerFinish = plot(i,iOld, innerDelay, textDuration);
 		rectFinish = innerDelay; // for plusMinus below
 	} else if (forward) {
