@@ -1,5 +1,5 @@
 "use strict";
-var margin = {top: 20, right: 75, bottom: 10, left: 70},
+var margin = {top: 20, right: 80, bottom: 10, left: 70},
     width = 300,
     height = width*2;
 
@@ -403,7 +403,13 @@ buttons.on('click', function(d) {
 	// Labels adjust first if advancing, second otherwise.
 	var innerFinish, rectFinish,
 		forward = (d === 1 && i !== 0) || (d === -1 && i === lastFrame);
-	if (forward) {
+	if (frames[i].R === frames[iOld].R &&
+			frames[i].V === frames[iOld].V &&
+			frames[i].U === frames[iOld].U) {
+		labelsAdjust(i,iOld,innerDelay);
+		innerFinish = plot(i,iOld, innerDelay);
+		rectFinish = innerDelay; // for plusMinus below
+	} else if (forward) {
 		var labelFinish = labelsAdjust(i,iOld,innerDelay);
 		innerFinish = plot(i,iOld, labelFinish);
 	} else {
