@@ -280,10 +280,11 @@ var scale = d3.scale.linear()
   .range([0,width]);
 
 function plot(i, iOld, delay, rectDuration) { // Plotting workhorse
-	var frame = frames[i],
-		sU = scale(frame.U),
-		sV = scale(frame.V),
-		sR = scale(frame.R),
+	var currentFrame = frames[i],
+		oldFrame = frames[iOld], // needed as switch for Runnumber
+		sU = scale(currentFrame.U),
+		sV = scale(currentFrame.V),
+		sR = scale(currentFrame.R),
 		rectDuration = rectDuration || 1000;
 
 	var testNegOn = (i !== 4); // Shows positive only on Frame 4
@@ -334,47 +335,51 @@ function plot(i, iOld, delay, rectDuration) { // Plotting workhorse
 		.attr('opacity', testNegOn ? 0.6 : 0);
 
 	// Labels
-	if (frames[i].R !== frames[iOld].R ||
-			frames[i].V !== frames[iOld].V ||
-			frames[i].U !== frames[iOld].U) {
-		function runNumber(selection, end, decimal) {
-			decimal = decimal || 1;
-			return function() {
-				var n = d3.interpolateNumber(selection.text().replace(/%/g, ""), end);
-				return function(t) {d3.select(this).text(n(t).toFixed(decimal)+'%');};
-			};
-		}
+	function runNumber(selection, end, decimal) {
+		decimal = decimal || 1;
+		return function() {
+			var n = d3.interpolateNumber(selection.text().replace(/%/g, ""), end);
+			return function(t) {d3.select(this).text(n(t).toFixed(decimal)+'%');};
+		};
+	}
+
+	if (currentFrame.R !== oldFrame.R ||
+			currentFrame.V !== oldFrame.V ||
+			currentFrame.U !== oldFrame.U) {
 
 		rLabel.transition().delay(delay).duration(rectDuration)
 			.attr('x', sR/2)
 			.attr('y', width - sV - 5)
-			.tween('text', runNumber(rLabel,frames[i].R, (frames[i].R < 10 && iOld !== lastFrame) ? 2 : 1));
+			.tween('text', runNumber(rLabel,currentFrame.R, (currentFrame.R < 10 && iOld !== lastFrame) ? 2 : 1));
 
 		vLabel.transition().delay(delay).duration(rectDuration)
 			.attr('y', width - sV/2)
-			.tween('text', runNumber(vLabel, frames[i].V));
+			.tween('text', runNumber(vLabel, currentFrame.V));
 
 		uLabel.transition().delay(delay).duration(rectDuration)
 			.attr('y', width + sU/2)
-			.tween('text', runNumber(uLabel, frames[i].U)) ;
+			.tween('text', runNumber(uLabel, currentFrame.U)) ;
 	}
 	return delay + rectDuration;
 }
 
 function labelsAdjust(i, iOld, delay) {
-	var fontShiftDuration = 500,
+	var currentFrame = frames[i],
+			oldFrame = frames[iOld],
+			fontShiftDuration = 500,
 			toggled = false;
 
 	labels.each(function(d) {
 		var showD = 'show' + d;
-		if (frames[i][showD] !== frames[iOld][showD]) {
+		if (currentFrame[showD] !== oldFrame[showD]) {
+			var currentD = currentFrame[showD];
 			toggled = true;
 			d3.select(this).transition()
 				.duration(fontShiftDuration)
 				.delay(delay)
-				.attr('opacity', frames[i][showD] ? 1 : 0)
-				.attr('font-size', frames[i][showD] === 'strong' ? '1.5em' : '1em')
-				.attr('font-weight', frames[i][showD] === 'strong' ? 700 : 400);
+				.attr('opacity', currentD ? 1 : 0)
+				.attr('font-size', currentD === 'strong' ? '1.5em' : '1em')
+				.attr('font-weight', currentD === 'strong' ? 700 : 400);
 		}
 	});
 
@@ -414,24 +419,26 @@ buttons.on('click', function(d) {
 	var interDelay = 500,
 		innerDelay = interDelay + textDuration;
 	// "inner" means label & plot transitions, which are sandwiched btw text disapparance & reintry
+	//
 	// Labels adjust before rects if advancing, the reverse otherwise,
 	// Except special case where they happen at the same time.
 	var labelStart = innerDelay, rectStart = innerDelay, innerFinish = 0,
 		forward = (d === 1 && i !== 0) || (d === -1 && i === lastFrame);
+
 	if (currentFrame.R === oldFrame.R &&
 			currentFrame.V === oldFrame.V &&
 			currentFrame.U === oldFrame.U) {
-		labelsAdjust(i, iOld, labelStart);
+		labelsAdjust(i, iOld, labelStart); // same time
 		innerFinish = plot(i,iOld, rectStart, textDuration);
 	} else if (forward) {
-		rectStart = labelsAdjust(i,iOld,labelStart);
+		rectStart = labelsAdjust(i,iOld,labelStart); // labels first
 		innerFinish = plot(i,iOld, rectStart);
 	} else {
-		labelStart = plot(i,iOld, rectStart);
+		labelStart = plot(i,iOld, rectStart); // rects first
 		innerFinish = labelsAdjust(i,iOld, labelStart);
 	}
 
-	// ** Special case: reset rLabel when repeating
+	// ** reset rLabel when repeating
 	if (i === 0 && iOld === lastFrame) {
 		window.setTimeout(function() {rLabel.text(frames[0].R.toFixed(2));}, innerFinish);
 	}
