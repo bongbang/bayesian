@@ -108,7 +108,6 @@ var textbox = container.append('div')
 	.style('left', width/2 + margin.left + 'px')
 	.style('width', width/2 + 'px')
 	.style('height', width - offset.top - offset.bottom + 'px')
-	.style('opacity', 0)
 	.style('padding', '10px 0 0 8px')
 	.style('margin', 0)
 	.style('z-index', 1);
@@ -383,11 +382,9 @@ function labelsAdjust(i, iOld, delay) {
 }
 
 // PLOT RENDERING
-var i = 0;
+var i = 0; // global required for onClick function
 plot(i,1,0);
-textbox
-	.html(frames[i].text)
-	.style('opacity', 1);
+textbox.html(frames[i].text);
 nextButton.attr('fill', 'orange');
 
 // OnClick action
@@ -399,9 +396,8 @@ buttons.on('click', function(d) {
 	} else if (i < 0) {i = lastFrame;
 	}
 
-	var interDelay = 500,
-		innerDelay = interDelay + textDuration;
-	// "inner" means label & plot transitions, which are sandwiched btw text disapparance & reintry
+	var currentFrame = frames[i],
+		oldFrame = frames[iOld];
 
 	// ===== Transition sequence hereonafter =====
 	// Button dims
@@ -412,24 +408,27 @@ buttons.on('click', function(d) {
 	textbox.transition().duration(textDuration)
 		.style('opacity', 0)
 		.each('end', function() {
-			textbox.html(frames[i].text);
+			textbox.html(currentFrame.text);
 		});
 
-	// Labels adjust first if advancing, second otherwise.
-	var innerFinish, rectFinish,
+	var interDelay = 500,
+		innerDelay = interDelay + textDuration;
+	// "inner" means label & plot transitions, which are sandwiched btw text disapparance & reintry
+	// Labels adjust before rects if advancing, the reverse otherwise,
+	// Except special case where they happen at the same time.
+	var labelStart = innerDelay, rectStart = innerDelay, innerFinish = 0,
 		forward = (d === 1 && i !== 0) || (d === -1 && i === lastFrame);
-	if (frames[i].R === frames[iOld].R &&
-			frames[i].V === frames[iOld].V &&
-			frames[i].U === frames[iOld].U) {
-		labelsAdjust(i, iOld, innerDelay);
-		innerFinish = plot(i,iOld, innerDelay, textDuration);
-		rectFinish = innerDelay; // for plusMinus below
+	if (currentFrame.R === oldFrame.R &&
+			currentFrame.V === oldFrame.V &&
+			currentFrame.U === oldFrame.U) {
+		labelsAdjust(i, iOld, labelStart);
+		innerFinish = plot(i,iOld, rectStart, textDuration);
 	} else if (forward) {
-		var labelFinish = labelsAdjust(i,iOld,innerDelay);
-		innerFinish = plot(i,iOld, labelFinish);
+		rectStart = labelsAdjust(i,iOld,labelStart);
+		innerFinish = plot(i,iOld, rectStart);
 	} else {
-		rectFinish = plot(i,iOld, innerDelay);
-		innerFinish = labelsAdjust(i,iOld, rectFinish);
+		labelStart = plot(i,iOld, rectStart);
+		innerFinish = labelsAdjust(i,iOld, labelStart);
 	}
 
 	// ** Special case: reset rLabel when repeating
@@ -449,16 +448,16 @@ buttons.on('click', function(d) {
 			.attr('fill', 'orange');
 	}
 
-	// +/- appears w/ rect OR disappears w/ textbox (when applicable)
-	if (frames[i].showPlusMinus !== frames[iOld].showPlusMinus) {
+	// +/- appears/disappears w/ labels except where adjustment is required to avoid clash
+	if (currentFrame.showPlusMinus !== oldFrame.showPlusMinus) {
 		plusMinus.transition().duration(textDuration)
 			.delay(function() {
-				if (forward) { // avoid clash
-					return [2,lastFrame].indexOf(i) !== -1 ? innerDelay + 700 : innerDelay;
+				if (forward) {
+					return [2,lastFrame].indexOf(i) !== -1 ? labelStart + 700 : labelStart;
 				} else {
-					return [0,1].indexOf(i) !== -1 ? rectFinish - 700 : rectFinish;
+					return [0,1].indexOf(i) !== -1 ? labelStart - 700 : labelStart;
 				}
 			})
-			.attr('opacity', (frames[i].showPlusMinus) ? 1 : 0 );
+			.attr('opacity', (currentFrame.showPlusMinus) ? 1 : 0 );
 	}
 });
