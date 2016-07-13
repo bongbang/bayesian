@@ -336,7 +336,7 @@ function plot(i, iOld, delay, rectDuration) { // Plotting workhorse
 
 	// Labels
 	function runNumber(selection, end, decimal) {
-		decimal = decimal || 1;
+		if (decimal === undefined) decimal = 1;
 		return function() {
 			var n = d3.interpolateNumber(selection.text().replace(/%/g, ""), end);
 			return function(t) {d3.select(this).text(n(t).toFixed(decimal)+'%');};
