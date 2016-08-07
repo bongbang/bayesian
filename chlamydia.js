@@ -93,16 +93,19 @@ var textDuration = 500,
 // Page elements
 var container = d3.select('body').append('div')
 	.attr('id', 'container')
-	.style('position', 'relative')
-	.style('font',fontStyle)
-  .style('width', width + margin.left + margin.right + 'px')
-	.style('margin', 0)
-	.style('padding', 0);
+	.style({
+		'position': 'relative',
+		'font':fontStyle,
+		'width': width + margin.left + margin.right + 'px',
+		'margin': 0,
+		'padding': 0
+	});
 
 var offset = {top: 20, bottom: 10}; // textbox tweak
 var textbox = container.append('div')
 	.attr('id', 'textbox')
-	.style({'position': 'absolute',
+	.style({
+		'position': 'absolute',
 		'box-sizing': 'border-box',
 		'top': margin.top + offset.top + 'px',
 		'left': width/2 + margin.left + 'px',
@@ -110,7 +113,8 @@ var textbox = container.append('div')
 		'height': width - offset.top - offset.bottom + 'px',
 		'padding': '10px 0 0 8px',
 		'margin': 0,
-		'z-index': 1});
+		'z-index': 1
+	});
 
 container.append('svg')
   .attr("width", width + margin.left + margin.right)
@@ -118,10 +122,10 @@ container.append('svg')
 
 	.append('style')
 	.text(
-		'#buttonsPlace g.button:hover use {fill: #000;}' +
-		'g.button {cursor: pointer}' +
-		'g.button:active rect {fill: #EEE;}' +
-		'#buttonsPlace:hover g use {fill: #CCC;}'
+		'#buttonsPlace > .button:hover > use {fill: #000;}' +
+		'.button {cursor: pointer}' +
+		'.button:active rect {fill: #EEE;}' + // when mousedown
+		'#buttonsPlace:hover use {fill: #CCC;}'
 		);
 
 var svg = container.select('svg').append("g")
@@ -165,7 +169,7 @@ var buttonsPlace = svg.append('g')
 	.attr('id', 'buttonsPlace');
 
 var buttonWidth = 32;
-var buttons = buttonsPlace.selectAll('g.button')
+var buttons = buttonsPlace.selectAll('.button')
 	.data([-1, 1])
 	.enter()
 	.append('g')
@@ -228,15 +232,19 @@ var labels = svg.selectAll('text.label')
 		.attr('opacity',0);
 
 var rLabel = svg.select('#R-label')
-		.attr('text-anchor', 'middle'),
-	vLabel = svg.select('#V-label')
-		.attr('x', -10)
-		.attr('text-anchor', 'end')
-		.attr('alignment-baseline', 'middle'),
-	uLabel = svg.select('#U-label')
-		.attr('x', width + 10)
-		.attr('text-anchor', 'start')
-		.attr('alignment-baseline', 'middle');
+		.attr('text-anchor', 'middle');
+var vLabel = svg.select('#V-label')
+			.attr({
+				'x': -10,
+				'text-anchor': 'end',
+				'alignment-baseline': 'middle'
+			});
+var uLabel = svg.select('#U-label')
+			.attr({
+				'x': width + 10,
+				'text-anchor': 'start',
+				'alignment-baseline': 'middle'
+			});
 
 var plusMinus = svg.append('g')
 	.attr('transform', 'translate(-10,' + width + ')')
@@ -253,22 +261,12 @@ var plusMinus = svg.append('g')
 	})
 	.html(function(d) {return d;});
 
-// Sources
-
-// svg.append('text')
-// 	.attr('x', width + 5)
-// 	.attr('y', width*2)
-// 	.attr('transform', 'rotate(-90 '  +(width+5)+ ' ' +width*2+ ')')
-// 	.attr('text-anchor', 'start')
-// 	.attr('alignment-baseline', 'text-before-edge')
-// 	.attr('font-size', '12px')
-// 	.attr('fill', '#666')
-// 	.html('&copy; Tom Vamvanij');
-
 container.append('p')
-	.style('margin', 0)
-	.style('font-size', '12px')
-	.style('color', '#666')
+	.style({
+		'margin': 0,
+		'font-size': '12px',
+		'color': '#666'
+	})
 	.html(
 			'By Tom Vamvanij <br>' +
 			'Sources: <a href="http://www.cdc.gov/nchs/nhanes/">NHANES</a>, 2001&ndash;2012 (prevalence). ' +
@@ -321,18 +319,22 @@ function plot(i, iOld, delay, rectDuration) { // Plotting workhorse
 		.attr('y', sU)
 		.call(imageSwitch);
 	falPos.transition().delay(delay).duration(rectDuration)
-    .attr('x', sR)
-    .attr('y', sU)
-    .attr('height', width - sU)
-    .attr('width', width - sR);
+    .attr({
+			'x': sR,
+			'y': sU,
+			'height': width - sU,
+			'width': width - sR
+		});
 
 	svg.selectAll('.tru_neg').transition().delay(delay).duration(rectDuration)
-		.attr({'x': sR,
+		.attr({
+			'x': sR,
 			'y': width,
 			'height': sU,
 			'width': width - sR,
 			'fill':  i === 0 ? '#CCC' :'#BFB',
-			'opacity': testNegOn ? 0.6 : 0});
+			'opacity': testNegOn ? 0.6 : 0
+		});
 
 	// Labels
 	function runNumber(selection, end, decimal) {
