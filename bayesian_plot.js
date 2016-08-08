@@ -11,18 +11,28 @@ var V =	92.5, // Sensitivity
   U = 98.6, // Specificity
   R = 0.65; // Chlamydia prevalence of white American female 25-29
 
+function setAttributes(el, attrs) {
+	for (var key in attrs) {
+		el.setAttribute(key, attrs[key]);
+	}
+}
+
 var svgns = 'http://www.w3.org/2000/svg';
 
-var svgFrame = document.createElementNS(svgns,'svg');
-svgFrame.setAttribute('width', width + margin.left + margin.right);
-svgFrame.setAttribute('height', height + margin.top + margin.bottom);
+var svgFrame = (function() {
+	var svgFrame = document.createElementNS(svgns,'svg');
+	svgFrame.setAttribute('width', width + margin.left + margin.right);
+	svgFrame.setAttribute('height', height + margin.top + margin.bottom);
+	var svgCSS = document.createElementNS(svgns,'style');
+	svgCSS.textContent =
+		'.vertical-drag-bar {cursor: ns-resize; pointer-events:all; fill:none}' +
+		'.horizontal-drag-bar {cursor: col-resize; pointer-events:all; visibility:hidden}' +
+		'.horizontal-drag-bar:hover {visibility:visible}' +
+		'.drag_frame {stroke: yellow; stroke-width: 10px; fill:none; opacity:0.5}';
+	svgFrame.appendChild(svgCSS);
+	return svgFrame;
+})();
 
-var svgCSS = document.createElementNS(svgns,'style');
-svgCSS.textContent =
-	'.vertical-drag-bar {cursor: ns-resize; pointer-events:all; fill:none}' +
-	'.horizontal-drag-bar {cursor: col-resize; pointer-events:all; visibility:hidden}' +
-	'.horizontal-drag-bar:hover {visibility:visible}';
-svgFrame.appendChild(svgCSS);
 
 var svg = document.createElementNS(svgns, 'g');
 svg.setAttribute(
@@ -36,8 +46,8 @@ var truPos = document.createElementNS(svgns,'rect'),
 	vDragBar = document.createElementNS(svgns,'rect'),
 	uDragBar = document.createElementNS(svgns,'rect'),
 	rDragBar = document.createElementNS(svgns,'rect'),
-	vDragLine = document.createElementNS(svgns, 'line'),
-	uDragLine = document.createElementNS(svgns, 'line');
+	vDragLine = document.createElementNS(svgns, 'rect'),
+	uDragLine = document.createElementNS(svgns, 'rect');
 
 
 truPos.setAttribute('fill', '#D00');
@@ -45,11 +55,6 @@ falNeg.setAttribute('fill', '#F99');
 falPos.setAttribute('fill', '#070');
 truNeg.setAttribute('fill', '#BFB');
 
-function setAttributes(el, attrs) {
-	for (var key in attrs) {
-		el.setAttribute(key, attrs[key]);
-	}
-}
 
 var multiplier = width/100,
 	sU = U*multiplier,
@@ -62,9 +67,9 @@ function plotConPos() {
 	var topLimit = width - sV;
 
 	setAttributes(vDragLine, {
-		'y1': topLimit,
-		'x2': sR,
-		'y2': topLimit
+		'y': topLimit,
+		'width': sR,
+		'height': width
 	});
 
 	setAttributes(truPos, {
@@ -102,43 +107,39 @@ function plotRDragBar() {
 }
 
 function plotConNeg() {
+	var negWidth = width - sR;
 	setAttributes(falPos, {
 		'x': sR,
 		'y': sU,
 		'height': width - sU,
-		'width': width - sR
+		'width': negWidth
 	});
 
 	setAttributes(uDragBar, {
 		'x': sR,
 		'y': width + sU - barWidth/2,
 		'height': barWidth,
-		'width': width - sR
+		'width': negWidth
 	});
 
 	setAttributes(truNeg, {
 		'x': sR,
 		'y': width,
 		'height': sU,
-		'width': width - sR
+		'width': negWidth
 	});
 
 	setAttributes(uDragLine, {
-		'x1': sR,
-		'y1': width + sU,
-		'x2': width,
-		'y2': width + sU
+		'x': sR,
+		'y': sU,
+		'width': negWidth,
+		'height': width
 	});
 }
 
 plotConPos();
 plotConNeg();
 plotRDragBar();
-[vDragLine, truPos, vDragBar, falPos,
-	truNeg, uDragBar, falNeg, uDragLine,
-	rDragBar].forEach(function(e) {
-	svg.appendChild(e);
-});
 
 setAttributes(uDragBar, {
 	'id': 'u-drag',
@@ -154,15 +155,17 @@ setAttributes(rDragBar, {
 	'class': 'horizontal-drag-bar'
 });
 
-setAttributes(uDragLine, {
-	'stroke': 'green',
+[uDragLine,vDragLine].forEach(function(e) {
+	setAttributes(e, {
+		'class': 'drag_frame',
+		'visibility': 'hidden'
+	});
 });
 
-vDragLine.setAttribute('stroke', 'orange');
 
 var startY = 0, startHeight = 0, target;
-vDragBar.onmousedown = initVerticalResize;
-uDragBar.onmousedown = initVerticalResize;
+// vDragBar.onmousedown = initVerticalResize;
+// uDragBar.onmousedown = initVerticalResize;
 
 function initVerticalResize(e) {
 	target = e.target.getAttribute('id');
@@ -170,12 +173,16 @@ function initVerticalResize(e) {
 	startHeight = (target === 'v-drag') ? sV : sU;
 	window.addEventListener('mousemove', doVerticalResize, false);
 	window.addEventListener('mouseup', stopResize, false);
-};
+	
+	e.target.removeEventListener('mouseleave', unfocusFrame);
+}
 
 function doVerticalResize(e) {
+	// var targetID = target.getAttribute('id');
 	var down = target === 'u-drag' ? 1 : -1,
 		cursorDistance = down*(e.clientY - startY),
 		newHeight = Math.min(Math.max(startHeight + cursorDistance, 0), width);
+	// console.log('cursorD: ' +cursorDistance + ', startHeight: ' +startHeight);
 	if (target === 'v-drag') {
 		sV = newHeight;
 		plotConPos();
@@ -185,6 +192,18 @@ function doVerticalResize(e) {
 	}
 	plotRDragBar();
 }
+
+function unfocusFrame(e) {
+	e.target.parentElement.firstChild.setAttribute('visibility','hidden');
+}
+
+[uDragBar, vDragBar].forEach(function(element) {
+	element.addEventListener('mouseover', function() {
+		element.parentElement.firstChild.setAttribute('visibility','visible');
+	}, false);
+	element.addEventListener('mouseleave', unfocusFrame , false);
+	element.addEventListener('mousedown', initVerticalResize, false);
+});
 
 var startX = 0, startR = 0;
 rDragBar.onmousedown = function(e) {
@@ -206,8 +225,28 @@ function stopResize() {
 	window.removeEventListener('mousemove', doVerticalResize, false);
 	window.removeEventListener('mousemove', doHorizontalResize, false);
 	window.removeEventListener('mouseup', stopResize, false);
+	var targetElement = document.getElementById(target);
+	targetElement.addEventListener('mouseleave', unfocusFrame, false);
+	if (targetElement.parentElement.querySelector(':hover') !== targetElement) {
+		targetElement.parentElement.firstChild.setAttribute('visibility','hidden');
+	}
 }
 
+(function() {
+	var vDrag = document.createElementNS(svgns, 'g'),
+		uDrag = document.createElementNS(svgns, 'g');
+	[vDragLine, vDragBar].forEach(function(e) {
+		vDrag.appendChild(e);
+	});
 
+	[uDragLine, uDragBar].forEach(function(e) {
+		uDrag.appendChild(e);
+	});
+
+	[truPos, falPos, truNeg, falNeg,
+		vDrag, uDrag, rDragBar].forEach(function(e) {
+	svg.appendChild(e);
+	});
+})();
 document.body.appendChild(svgFrame);
 
