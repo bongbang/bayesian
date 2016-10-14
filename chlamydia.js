@@ -275,7 +275,7 @@ container.append('p')
 
 var scale = d3.scale.linear()
   .domain([0,100])
-  .range([0,width]);
+  .rangeRound([0,width]);
 
 function plot(i, iOld, delay, rectDuration) { // Plotting workhorse
 	var currentFrame = frames[i],
