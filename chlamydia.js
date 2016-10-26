@@ -122,10 +122,12 @@ container.append('svg')
 
 	.append('style')
 	.text(
-		'#buttonsPlace > .button:hover > use {fill: #000;}' +
+		// '#buttonsPlace > .button:hover > use {fill: #000;}' +
 		'.button {cursor: pointer}' +
-		'.button:active rect {fill: #EEE;}' + // when mousedown
-		'#buttonsPlace:hover use {fill: #CCC;}'
+		'.button:active rect {fill: #EEE}' + // when mousedown
+		'.gray {fill: #CCC}' +
+		'.black {fill: #000}'
+		// '#buttonsPlace:hover use {fill: #CCC;}'
 		);
 
 var svg = container.select('svg').append("g")
@@ -452,6 +454,7 @@ buttons.on('click', function(d) {
 		.style('opacity', 1);
 
 	// Button lights up
+	buttons.selectAll('use').attr('class','');
 	if (i !== lastFrame) {
 		nextButton.transition().duration(textDuration)
 			.delay(innerFinish + interDelay)
@@ -470,4 +473,13 @@ buttons.on('click', function(d) {
 			})
 			.attr('opacity', (currentFrame.showPlusMinus) ? 1 : 0 );
 	}
+});
+
+buttons.on('mouseover', function() {
+	buttons.selectAll('use').attr('class','gray');
+	d3.select(this).select('use').attr('class','black');
+});
+
+buttons.on('mouseout', function() {
+	buttons.selectAll('use').attr('class','');
 });
